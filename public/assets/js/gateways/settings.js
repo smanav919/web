@@ -4,7 +4,7 @@ function settingsSave() {
 	"use strict";
 
     document.getElementById( "settings_button" ).disabled = true;
-	document.getElementById( "settings_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
 
     var formData = new FormData(document.getElementById('settings_form'));
 

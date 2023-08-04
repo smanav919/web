@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\GatewayController;
 use App\Http\Controllers\PaymentController;
 use App\Models\Activity;
 use App\Models\Clients;
 use App\Models\CustomSettings;
+use App\Models\Currency;
 use App\Models\Faq;
 use App\Models\FrontendForWho;
 use App\Models\FrontendFuture;
@@ -116,12 +118,19 @@ class AdminController extends Controller
             //Total Users
             Cache::put('total_users', count(User::all()), now()->addMinutes(360));
         }
+
+        // if(!Cache::has('check_gateway_webhooks')){
+        //     //Check gateway webhooks if necessary
+        //     GatewayController::checkGatewayWebhooks();
+        //     Cache::put('check_gateway_webhooks', true, now()->addMinutes(2880)); // 2 days
+        // }
+
         //Variables
         $activity = Activity::orderBy('created_at', 'desc')->get();
         $latestOrders = UserOrder::orderBy('created_at', 'desc')->take(10)->get();
 
         $gatewayError = false;
-        $gateway = Gateways::where("mode", "sandbox")->first();
+        // $gateway = Gateways::where("mode", "sandbox")->first();
         // if($gateway != null){
         //     if(env('APP_ENV') != 'development'){
         //         error_log('Gateway is set to use sandbox. Please set mode to development!');
@@ -129,7 +138,10 @@ class AdminController extends Controller
         //     }
         // }
 
-        return view('panel.admin.index', compact('activity', 'latestOrders','gatewayError'));
+        $settings = Setting::first();
+        $currencySymbol = Currency::where('id', $settings->default_currency)->first()->symbol;
+         
+        return view('panel.admin.index', compact('activity', 'latestOrders','gatewayError', 'currencySymbol'));
     }
 
     //USER MANAGEMENT
@@ -175,6 +187,18 @@ class AdminController extends Controller
         $openai = OpenAIGenerator::whereId($request->entry_id)->first();
         if ($status  == 1 or $status == 0){
             $openai->active = $status;
+            $openai->save();
+        }else{
+            return response()->json([], 403);
+        }
+
+    }
+
+    public function openAIListUpdatePackageStatus(Request $request){
+        $status = $request->status;
+        $openai = OpenAIGenerator::whereId($request->entry_id)->first();
+        if ($status  == 1 or $status == 0){
+            $openai->premium = $status;
             $openai->save();
         }else{
             return response()->json([], 403);
@@ -308,6 +332,7 @@ class AdminController extends Controller
                 $newFilter->save();
             }
         }
+        $template->premium = $request->premium;
 
         $template->save();
     }
@@ -328,7 +353,7 @@ class AdminController extends Controller
     }
 
     public function openAICategoriesDelete($id = null){
-        $item = OpenAIGenerator::where('id', $id)->firstOrFail();
+        $item = OpenaiGeneratorFilter::where('id', $id)->firstOrFail();
         $item->delete();
         return back()->with(['message' => 'Deleted Successfully', 'type' => 'success']);
     }
@@ -430,7 +455,7 @@ class AdminController extends Controller
             $plan->total_words = (int)$request->total_words;
             $plan->total_images = (int)$request->total_images;
             $plan->ai_name = $request->ai_name;
-            $plan->max_tokens = (int)$request->max_tokens;
+            // $plan->max_tokens = (int)$request->max_tokens;
             $plan->can_create_ai_images = (int)$request->can_create_ai_images;
             $plan->plan_type = $request->plan_type;
             $plan->features = $request->features;
@@ -705,7 +730,10 @@ class AdminController extends Controller
             $fSettings->footer_button_url = $request->footer_button_url;
             $fSettings->footer_copyright = $request->footer_copyright;
             $fSettings->save();
-
+            
+            $fSecSettings = FrontendSectionsStatusses::first();
+            $fSecSettings->preheader_active = $request->preheader_active;
+            $fSecSettings->save();
 
             $logo_types = [
                 'logo' => '',
@@ -796,7 +824,6 @@ class AdminController extends Controller
             $settings->custom_templates_title = $request->custom_templates_title;
             $settings->custom_templates_description = $request->custom_templates_description;
 
-
             $settings->tools_active = $request->tools_active;
             $settings->tools_title = $request->tools_title;
             $settings->tools_description = $request->tools_description;
@@ -809,9 +836,6 @@ class AdminController extends Controller
             $settings->testimonials_subtitle_one = $request->testimonials_subtitle_one;
             $settings->testimonials_subtitle_two = $request->testimonials_subtitle_two;
 
-
-
-
             $settings->pricing_active = $request->pricing_active;
             $settings->pricing_title = $request->pricing_title;
             $settings->pricing_description = $request->pricing_description;
@@ -823,9 +847,17 @@ class AdminController extends Controller
             $settings->faq_text_one = $request->faq_text_one;
             $settings->faq_text_two = $request->faq_text_two;
 
+            $settings->blog_active = $request->blog_active;
+            $settings->blog_title = $request->blog_title;
+            $settings->blog_subtitle = $request->blog_subtitle;
+            $settings->blog_posts_per_page = $request->blog_posts_per_page;
+            $settings->blog_button_text = $request->blog_button_text;
+            $settings->blog_a_title = $request->blog_a_title;
+            $settings->blog_a_subtitle = $request->blog_a_subtitle;
+            $settings->blog_a_description = $request->blog_a_description;
+            $settings->blog_a_posts_per_page = $request->blog_a_posts_per_page;
 
             $settings->save();
-
 
         }
 

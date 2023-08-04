@@ -7,7 +7,9 @@ use App\Models\FrontendSetting;
 use App\Models\OpenAIGenerator;
 use App\Models\OpenaiGeneratorFilter;
 use App\Models\Setting;
+use App\Models\SettingTwo;
 use App\Models\UserOpenai;
+use App\Services\MemoryLimit;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -48,12 +50,12 @@ class AppServiceProvider extends ServiceProvider
 
         if ($db_set == 1) {
             //Force SSL HTTPS on all AJAX Requests
-            if($this->app->environment('production')) {
+            if ($this->app->environment('production')) {
                 \URL::forceScheme('https');
             }
 
             app()->useLangPath(base_path('lang'));
-            if (Schema::hasTable('migrations')){
+            if (Schema::hasTable('migrations')) {
                 View::share('setting', Setting::first());
                 if (Schema::hasTable('frontend_footer_settings')) {
                     if (FrontendSetting::first() == null) {
@@ -69,12 +71,19 @@ class AppServiceProvider extends ServiceProvider
                     }
                     View::share('fSectSettings', FrontendSectionsStatusses::first());
                 }
+                if (Schema::hasTable('settings_two')) {
+                    if (SettingTwo::first() == null) {
+                        $settings_two = new SettingTwo();
+                        $settings_two->save();
+                    }
+                    View::share('settings_two', SettingTwo::first());
+                }
                 $aiWriters = OpenAIGenerator::orderBy('title', 'asc')->where('active', 1)->get();
                 View::share('aiWriters', $aiWriters);
 
 
                 $voiceoverCheck = OpenAIGenerator::where('slug', 'ai_voiceover')->first();
-                if ($voiceoverCheck == null){
+                if ($voiceoverCheck == null) {
                     $createVo = new OpenAIGenerator();
                     $createVo->title = 'AI Voiceover';
                     $createVo->description = 'The AI app that turns audio speech into text with ease. Get ready to generate custom texts from audio files quickly and accurately.';
@@ -99,50 +108,58 @@ class AppServiceProvider extends ServiceProvider
                 view()->composer('*', function ($view) {
                     if (Auth::check()) {
                         if (
-                            !Cache::has('total_words_'.Auth::id())
-                            or !Cache::has('total_documents_'.Auth::id())
-                            or !Cache::has('total_text_documents_'.Auth::id())
-                            or !Cache::has('total_image_documents_'.Auth::id())
+                            !Cache::has('total_words_' . Auth::id())
+                            or !Cache::has('total_documents_' . Auth::id())
+                            or !Cache::has('total_text_documents_' . Auth::id())
+                            or !Cache::has('total_image_documents_' . Auth::id())
                         ) {
                             $total_documents_finder = UserOpenai::where('user_id', Auth::id())->get();
                             $total_words = UserOpenai::where('user_id', Auth::id())->sum('credits');
-                            Cache::put('total_words_'.Auth::id(), $total_words, now()->addMinutes(360));
+                            Cache::put('total_words_' . Auth::id(), $total_words, now()->addMinutes(360));
                             $total_documents = count($total_documents_finder);
-                            Cache::put('total_documents_'.Auth::id(), $total_documents, now()->addMinutes(360));
+                            Cache::put('total_documents_' . Auth::id(), $total_documents, now()->addMinutes(360));
                             $total_text_documents = count($total_documents_finder->where('credits', '!=', 1));
-                            Cache::put('total_text_documents_'.Auth::id(), $total_text_documents, now()->addMinutes(360));
+                            Cache::put('total_text_documents_' . Auth::id(), $total_text_documents, now()->addMinutes(360));
                             $total_image_documents = count($total_documents_finder->where('credits', '==', 1));
-                            Cache::put('total_image_documents_'.Auth::id(), $total_image_documents, now()->addMinutes(360));
+                            Cache::put('total_image_documents_' . Auth::id(), $total_image_documents, now()->addMinutes(360));
                         }
-                        $total_words = Cache::get('total_words_'.Auth::id()) ?? 0;
+                        $total_words = Cache::get('total_words_' . Auth::id()) ?? 0;
                         View::share('total_words', $total_words);
-                        $total_documents = Cache::get('total_documents_'.Auth::id()) ?? 0;
-                        View::share('total_documents', $total_words);
-                        $total_text_documents = Cache::get('total_text_documents_'.Auth::id()) ?? 0;
-                        View::share('total_text_documents', $total_words);
-                        $total_image_documents = Cache::get('total_image_documents_'.Auth::id()) ?? 0;
-                        View::share('total_image_documents', $total_words);
-
+                        $total_documents = Cache::get('total_documents_' . Auth::id()) ?? 0;
+                        View::share('total_documents', $total_documents);
+                        $total_text_documents = Cache::get('total_text_documents_' . Auth::id()) ?? 0;
+                        View::share('total_text_documents', $total_text_documents);
+                        $total_image_documents = Cache::get('total_image_documents_' . Auth::id()) ?? 0;
+                        View::share('total_image_documents', $total_image_documents);
                     }
                 });
 
                 //Global Mail Settings
                 $settings = Setting::first();
+                $settings_two = Schema::hasTable((new SettingTwo())->getTable()) ? SettingTwo::first() : null;
 
-                if ($settings !== null && isset($settings->stripe_status_for_now) && $settings->stripe_status_for_now == 'active') {
+                if (
+                    $settings !== null && isset($settings->stripe_status_for_now)
+                    && $settings->stripe_status_for_now == 'active'
+                ) {
                     View::share('good_for_now', true);
-                }else{
+                } else {
                     View::share('good_for_now', false);
                 }
 
-                Config::set(['mail.mailers' => ['smtp' =>
+                // Set default language
+                app()->setLocale($settings_two->languages_default ?? 'en');
+
+                Config::set(['mail.mailers' => [
+                    'smtp' =>
                     [
                         'transport' => 'smtp',
                         'host' => $settings->smtp_host ?? env('MAIL_HOST'),
                         'port' => (int)$settings->smtp_port ?? (int)env('MAIL_PORT'),
                         'encryption' => $settings->smtp_encryption ?? env('MAIL_ENCRYPTION'),
                         'username' => $settings->smtp_username ?? env('MAIL_USERNAME'),
-                        'password' => $settings->smtp_password ?? env('MAIL_PASSWORD')],
+                        'password' => $settings->smtp_password ?? env('MAIL_PASSWORD')
+                    ],
                     'timeout' => null,
                     'local_domain' => env('MAIL_EHLO_DOMAIN'),
                     'auth_mode' => null,
@@ -156,10 +173,9 @@ class AppServiceProvider extends ServiceProvider
 
 
                 $wordlist = DB::table('jobs')->where('id', '>', 0)->get();
-                if (count($wordlist)>0){
+                if (count($wordlist) > 0) {
                     Artisan::call("queue:work --once");
                 }
-
             }
         }
 
@@ -168,36 +184,7 @@ class AppServiceProvider extends ServiceProvider
             EnvironmentCheck::new(),
             DatabaseCheck::new(),
             UsedDiskSpaceCheck::new(),
-            Memory_Limit::new()
+            MemoryLimit::new()
         ]);
-
     }
-
-
-}
-
-/**
- * Creating custom checks
- */
-
-class Memory_Limit extends \Spatie\Health\Checks\Check
-{
-    public function run(): \Spatie\Health\Checks\Result
-    {
-        $memory_limit = getServerMemoryLimit();
-
-        $result = \Spatie\Health\Checks\Result::make();
-
-        if ($memory_limit == -1) {
-            return $result->ok(__('Unlimited'));
-        }
-
-        if ($memory_limit < 64) {
-            return $result->failed("{$memory_limit}M");
-        }
-
-        return $result->ok("{$memory_limit}M");
-
-    }
-
 }

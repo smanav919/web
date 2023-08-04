@@ -150,7 +150,7 @@
 											</div>
 										</div>
 									</div>
-									<div class="col-md-6">
+									<div class="col-md-6 hidden">
 										<div class="mb-3">
 											<label class="form-label">{{__('Max Tokens')}}</label>
 											<input type="number" name="max_tokens" id="max_tokens" class="form-control"  value="{{isset($subscription) ? $subscription->max_tokens : null}}"/>

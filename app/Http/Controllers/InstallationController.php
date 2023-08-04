@@ -15,7 +15,8 @@ use Illuminate\Support\Str;
 class InstallationController extends Controller
 {
 
-    public function envFileEditor(){
+    public function envFileEditor()
+    {
         try {
             DB::connection()->getPdo();
             $db_set = 1;
@@ -26,58 +27,59 @@ class InstallationController extends Controller
             if (Schema::hasTable('migrations')) {
                 $db_ready = 1;
             }
-        }else{
+        } else {
             $db_ready = 0;
         }
 
 
-        if ($db_ready == 0){
+        if ($db_ready == 0) {
             return view('vendor.installer.env_file_editor');
         }
 
-        if (Auth::check()){
-            if (Auth::user()->type == 'admin'){
+        if (Auth::check()) {
+            if (Auth::user()->type == 'admin') {
                 return view('vendor.installer.env_file_editor');
-            }else{
+            } else {
                 abort(404);
             }
-        }else{
+        } else {
             abort(404);
         }
     }
-    public function envFileEditorSave(Request $request){
+    public function envFileEditorSave(Request $request)
+    {
 
         $envFileData =
-            'APP_NAME="'.$request->app_name.'"'."\n".
-            'APP_ENV='.$request->environment."\n".
-            'APP_KEY='.'base64:'.base64_encode(Str::random(32))."\n".
-            'APP_DEBUG='.$request->app_debug."\n".
-            'APP_URL='.$request->app_url."\n\n".
-            'DB_CONNECTION='.'mysql'."\n".
-            'DB_HOST='.$request->database_hostname."\n".
-            'DB_PORT='.'3306'."\n".
-            'DB_DATABASE='.$request->database_name."\n".
-            'DB_USERNAME='.$request->database_username."\n".
-            'DB_PASSWORD="'.$request->database_password.'"'."\n\n".
-            'BROADCAST_DRIVER='.'log'."\n".
-            'CACHE_DRIVER='.'file'."\n".
-            'SESSION_DRIVER='.'file'."\n".
-            'QUEUE_DRIVER='.'sync'."\n\n".
-            'QUEUE_CONNECTION='.'database'."\n\n".
-            'REDIS_HOST='.'127.0.0.1'."\n".
-            'REDIS_PASSWORD='.'null'."\n".
-            'REDIS_PORT='.'6379'."\n\n".
-            'MAIL_DRIVER='.$request->mail_driver."\n".
-            'MAIL_HOST='.$request->mail_host."\n".
-            'MAIL_PORT='.$request->mail_port."\n".
-            'MAIL_USERNAME='.$request->mail_username."\n".
-            'MAIL_PASSWORD='.$request->mail_password."\n".
-            'MAIL_ENCRYPTION='.$request->mail_encryption."\n\n".
-            'MAIL_FROM_ADDRESS='.$request->mail_from_address."\n\n".
-            'MAIL_FROM_NAME='.$request->mail_from_name."\n\n".
-            'PUSHER_APP_ID='.'null'."\n".
-            'PUSHER_APP_KEY='.'null'."\n".
-            'PUSHER_APP_SECRET='.'null';
+            'APP_NAME="' . $request->app_name . '"' . "\n" .
+            'APP_ENV=' . $request->environment . "\n" .
+            'APP_KEY=' . 'base64:' . base64_encode(Str::random(32)) . "\n" .
+            'APP_DEBUG=' . $request->app_debug . "\n" .
+            'APP_URL=' . $request->app_url . "\n\n" .
+            'DB_CONNECTION=' . 'mysql' . "\n" .
+            'DB_HOST=' . $request->database_hostname . "\n" .
+            'DB_PORT=' . '3306' . "\n" .
+            'DB_DATABASE=' . $request->database_name . "\n" .
+            'DB_USERNAME=' . $request->database_username . "\n" .
+            'DB_PASSWORD="' . $request->database_password . '"' . "\n\n" .
+            'BROADCAST_DRIVER=' . 'log' . "\n" .
+            'CACHE_DRIVER=' . 'file' . "\n" .
+            'SESSION_DRIVER=' . 'file' . "\n" .
+            'QUEUE_DRIVER=' . 'sync' . "\n\n" .
+            'QUEUE_CONNECTION=' . 'database' . "\n\n" .
+            'REDIS_HOST=' . '127.0.0.1' . "\n" .
+            'REDIS_PASSWORD=' . 'null' . "\n" .
+            'REDIS_PORT=' . '6379' . "\n\n" .
+            'MAIL_DRIVER=' . $request->mail_driver . "\n" .
+            'MAIL_HOST=' . $request->mail_host . "\n" .
+            'MAIL_PORT=' . $request->mail_port . "\n" .
+            'MAIL_USERNAME=' . $request->mail_username . "\n" .
+            'MAIL_PASSWORD=' . $request->mail_password . "\n" .
+            'MAIL_ENCRYPTION=' . $request->mail_encryption . "\n\n" .
+            'MAIL_FROM_ADDRESS=' . $request->mail_from_address . "\n\n" .
+            'MAIL_FROM_NAME=' . $request->mail_from_name . "\n\n" .
+            'PUSHER_APP_ID=' . 'null' . "\n" .
+            'PUSHER_APP_KEY=' . 'null' . "\n" .
+            'PUSHER_APP_SECRET=' . 'null';
 
         try {
             $envPath = base_path('.env');
@@ -90,7 +92,8 @@ class InstallationController extends Controller
     }
 
 
-    public function install(Request $request){
+    public function install(Request $request)
+    {
 
         try {
             $dbconnect = DB::connection()->getPDO();
@@ -99,31 +102,30 @@ class InstallationController extends Controller
             return redirect()->route('installer.envEditor');
         }
 
-        if (!Schema::hasTable('migrations')){
+        if (!Schema::hasTable('migrations')) {
             Artisan::call('migrate', [
                 '--force' => true
             ]);
             Artisan::call('db:seed', [
                 '--force' => true
             ]);
-        }else{
-
+        } else {
             return  redirect()->route('index');
         }
 
-        if (!Schema::hasTable('activity')){
+        if (!Schema::hasTable('activity')) {
             return 'You are using Plesk for magicAI. It requires MariaDB 10.X or Mysql 5.6,5.7. Please check your mariaDB or Mysql version. After upgrade your mariadb or mysql please reset the table.';
         }
 
         //First Startup of Script
         $settings = Setting::first();
-        if ($settings == null){
+        if ($settings == null) {
             $settings = new Setting();
             $settings->save();
         }
 
         $adminUser = User::where('type', 'admin')->first();
-        if ($adminUser == null){
+        if ($adminUser == null) {
             $adminUser = new User();
             $adminUser->name = 'Admin';
             $adminUser->surname = 'Admin';
@@ -142,13 +144,14 @@ class InstallationController extends Controller
         return redirect()->route('dashboard.admin.settings.general');
     }
 
-    public function upgrade(){
+    public function upgrade()
+    {
         $version = 1.15;
 
         $currentVersion = Setting::first()->script_version;
 
-        if ($version > $currentVersion){
-            if (!Schema::hasTable('migrations')){
+        if ($version > $currentVersion) {
+            if (!Schema::hasTable('migrations')) {
                 return 'MagicAI is not installed. Install it first. Go to /install';
             }
 
@@ -164,34 +167,36 @@ class InstallationController extends Controller
             return "<p>magicAI Updated to the version: $version you can go home. The 1.20 update is for testing. If you want to contribute in this system please go to admin and update menu to test autoupdating system.
 <br>This is the last version for updates.
 ";
-        }else{
+        } else {
             return 'Your system is at final version. This method is deprecated please update via admin panel.';
         }
     }
 
 
-    public function updateManual(){
-
-        $version = "1.62";
+    public function updateManual()
+    {
+        $version = "2.08";
 
         /*
         Yeni gelen tabloları migrate ediyoruz.
-        --force sebebi ise environmentin productionda olduğunda are you sure? diye bir uyarı veriyor bunu atlamak
+        --force sebebi ise environmentin productionda olduğunda are you sure? diye bir uyarı veriyor bunu atlamak.
         */
         Artisan::call('migrate', [
             '--force' => true
         ]);
 
-        //Yeni eklenen tüm tabloları burada sorguluyoruz. Eğer migrate başarılı ve tablo içerisi boş ise default dataları içerisine alacak. Alttakilerin tümü bu şekilde.
+        // Yeni eklenen tüm tabloları burada sorguluyoruz.
+        // Eğer migrate başarılı ve tablo içerisi boş ise default dataları içerisine alacak.
+        // Alttakilerin tümü bu şekilde.
         if (Schema::hasTable('frontend_tools')) {
-            if (count(\App\Models\FrontendTools::all())==0){
+            if (count(\App\Models\FrontendTools::all()) == 0) {
                 $path5 = resource_path('/dev_tools/frontend_tools.sql');
                 DB::unprepared(file_get_contents($path5));
             }
         }
 
         if (Schema::hasTable('faq')) {
-            if (count(\App\Models\Faq::all())==0){
+            if (count(\App\Models\Faq::all()) == 0) {
                 $path6 = resource_path('/dev_tools/faq.sql');
                 DB::unprepared(file_get_contents($path6));
             }
@@ -199,7 +204,7 @@ class InstallationController extends Controller
 
 
         if (Schema::hasTable('frontend_future')) {
-            if (count(\App\Models\FrontendFuture::all())==0){
+            if (count(\App\Models\FrontendFuture::all()) == 0) {
                 $path7 = resource_path('/dev_tools/frontend_future.sql');
                 DB::unprepared(file_get_contents($path7));
             }
@@ -207,7 +212,7 @@ class InstallationController extends Controller
 
 
         if (Schema::hasTable('howitworks')) {
-            if (count(\App\Models\HowitWorks::all())==0){
+            if (count(\App\Models\HowitWorks::all()) == 0) {
                 $path8 = resource_path('/dev_tools/howitworks.sql');
                 DB::unprepared(file_get_contents($path8));
             }
@@ -215,28 +220,28 @@ class InstallationController extends Controller
 
 
         if (Schema::hasTable('testimonials')) {
-            if (count(\App\Models\Testimonials::all())==0){
+            if (count(\App\Models\Testimonials::all()) == 0) {
                 $path9 = resource_path('/dev_tools/testimonials.sql');
                 DB::unprepared(file_get_contents($path9));
             }
         }
 
         if (Schema::hasTable('frontend_who_is_for')) {
-            if (count(\App\Models\FrontendForWho::all())==0){
+            if (count(\App\Models\FrontendForWho::all()) == 0) {
                 $path10 = resource_path('/dev_tools/frontend_who_is_for.sql');
                 DB::unprepared(file_get_contents($path10));
             }
         }
 
         if (Schema::hasTable('frontend_generators')) {
-            if (count(\App\Models\FrontendGenerators::all())==0){
+            if (count(\App\Models\FrontendGenerators::all()) == 0) {
                 $path11 = resource_path('/dev_tools/frontend_generators.sql');
                 DB::unprepared(file_get_contents($path11));
             }
         }
 
         if (Schema::hasTable('clients')) {
-            if (count(\App\Models\Clients::all())==0){
+            if (count(\App\Models\Clients::all()) == 0) {
                 $path12 = resource_path('/dev_tools/clients.sql');
                 DB::unprepared(file_get_contents($path12));
             }
@@ -246,8 +251,15 @@ class InstallationController extends Controller
             $path13 = resource_path('/dev_tools/health_check_result_history_items.sql');
             DB::unprepared(file_get_contents($path13));
         }
+        
+        if (Schema::hasTable('email_templates')) {
+            if (count(\App\Models\EmailTemplates::all()) == 0) {
+                $path14 = resource_path('/dev_tools/email_templates.sql');
+                DB::unprepared(file_get_contents($path14));
+            }
+        }
 
-        File::put(base_path().'/version.txt', $version);
+        File::put(base_path() . '/version.txt', $version);
 
         $settings = Setting::first();
         $settings->script_version = $version;

@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Mail\PasswordResetEmail;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\EmailTemplates;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -19,14 +20,15 @@ class SendPasswordResetEmail implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     protected $user;
     protected $settings;
+    protected $template;
     /**
      * Create a new job instance.
      */
     public function __construct(User $user)
     {
-
         $this->user = $user;
         $this->settings = Setting::first();
+        $this->template = EmailTemplates::where('id', 3)->first();
     }
 
     /**
@@ -34,6 +36,6 @@ class SendPasswordResetEmail implements ShouldQueue
      */
     public function handle(): void
     {
-        Mail::to($this->user->email)->send(new PasswordResetEmail($this->user, $this->settings));
+        Mail::to($this->user->email)->send(new PasswordResetEmail($this->user, $this->settings, $this->template));
     }
 }

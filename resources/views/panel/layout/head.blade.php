@@ -15,6 +15,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <meta name="stream-url" content="{{ $streamUrl??route('dashboard.user.openai.stream') }}">
     <link rel="icon" href="/{{$setting->favicon_path}}">
     <title>{{$setting->site_name}} | @yield('title')</title>
 
@@ -31,6 +32,7 @@
     <link href="/assets/css/demo.min.css" rel="stylesheet"/>
     <link href="/assets/css/toastr.min.css" rel="stylesheet"/>
     @yield('additional_css')
+    @stack('css')
     <link href="/assets/css/magic-ai.css" rel="stylesheet"/>
 	@vite('resources/css/app.css')
     @if($setting->dashboard_code_before_head != null)

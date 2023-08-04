@@ -27,7 +27,7 @@
 			<div class="row">
 				<div class="col-md-5 mx-auto">
 					<form id="settings_form" onsubmit="return ttsSettingsSave();" enctype="multipart/form-data">
-						<h3 class="mb-[25px] text-[20px]">{{__('OpenAI Settings')}}</h3>
+						<h3 class="mb-[25px] text-[20px]">{{__('Google TTS Settings')}}</h3>
 						<div class="row">
 
                             @if(env('APP_STATUS') == 'Demo')

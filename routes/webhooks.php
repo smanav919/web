@@ -15,7 +15,10 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'l
 
     Route::prefix('webhooks')->name('webhooks.')->group(function () {
         Route::post('/paypal', [PaypalController::class, 'handleWebhook']);
-        Route::get('/simulate', [PaypalController::class, 'simulateWebhookEvent']);
+        Route::post('/stripe', [StripeController::class, 'handleWebhook']);
+        Route::post('/yokassa', [YokassaController::class, 'handleWebhook']);
+
+        Route::get('/simulate', [PaypalController::class, 'simulateWebhookEvent']); // This is specific to Paypal
     });
 
 });

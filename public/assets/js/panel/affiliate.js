@@ -14,7 +14,7 @@ function sendRequestForm() {
 	"use strict";
 
 	document.getElementById( "send_request_button" ).disabled = true;
-	document.getElementById( "send_request_button" ).innerHTML = "Please Wait";
+	document.getElementById( "send_request_button" ).innerHTML = magicai_localize.please_wait;
 
 
 	var formData = new FormData();
@@ -46,7 +46,7 @@ function sendInvitationForm() {
     "use strict";
 
     document.getElementById( "send_invitation_button" ).disabled = true;
-    document.getElementById( "send_invitation_button" ).innerHTML = "Please Wait";
+    document.getElementById( "send_invitation_button" ).innerHTML = magicai_localize.please_wait;
 
 
     var formData = new FormData();

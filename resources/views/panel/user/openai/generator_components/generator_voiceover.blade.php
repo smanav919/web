@@ -40,62 +40,62 @@
                                         <x-info-tooltip text="{{__('Select speech language')}}" />
                                     </label>
                                     <select name="languages" id="languages" class="form-control form-select bg-[#fff] placeholder:text-black">
-                                        <option value="af-ZA">{{__('Afrikaans (South Africa)')}}</option>
-                                        <option value="ar-XA">{{__('Arabic')}}</option>
-                                        <option value="eu-ES">{{__('Basque (Spain)')}}</option>
-                                        <option value="bn-IN">{{__('Bengali (India)')}}</option>
-                                        <option value="bg-BG">{{__('Bulgarian (Bulgaria)')}}</option>
-                                        <option value="ca-ES">{{__('Catalan (Spain) ')}}</option>
-                                        <option value="yue-HK">{{__('Chinese (Hong Kong)')}}</option>
-                                        <option value="cs-CZ">{{__('Czech (Czech Republic)')}}</option>
-                                        <option value="da-DK">{{__('Danish (Denmark)')}}</option>
-                                        <option value="nl-BE">{{__('Dutch (Belgium)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "af") {{ 'selected' }} @endif value="af-ZA">{{__('Afrikaans (South Africa)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "ar") {{ 'selected' }} @endif value="ar-XA">{{__('Arabic')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "eu") {{ 'selected' }} @endif value="eu-ES">{{__('Basque (Spain)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "bn") {{ 'selected' }} @endif value="bn-IN">{{__('Bengali (India)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "bg") {{ 'selected' }} @endif value="bg-BG">{{__('Bulgarian (Bulgaria)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "ca") {{ 'selected' }} @endif value="ca-ES">{{__('Catalan (Spain) ')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "yue") {{ 'selected' }} @endif value="yue-HK">{{__('Chinese (Hong Kong)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "cs") {{ 'selected' }} @endif value="cs-CZ">{{__('Czech (Czech Republic)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "da") {{ 'selected' }} @endif value="da-DK">{{__('Danish (Denmark)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "nl") {{ 'selected' }} @endif value="nl-BE">{{__('Dutch (Belgium)')}}</option>
                                         <option value="nl-NL">{{__('Dutch (Netherlands)')}}</option>
                                         <option value="en-AU">{{__('English (Australia)')}}</option>
                                         <option value="en-IN">{{__('English (India)')}}</option>
                                         <option value="en-GB">{{__('English (UK)')}}</option>
-                                        <option value="en-US">{{__('English (US)')}}</option>
-                                        <option value="fil-PH">{{__('Filipino (Philippines)')}}</option>
-                                        <option value="fi-FI">{{__('Finnish (Finland)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "en") {{ 'selected' }} @endif value="en-US">{{__('English (US)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "fil") {{ 'selected' }} @endif value="fil-PH">{{__('Filipino (Philippines)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "fi") {{ 'selected' }} @endif value="fi-FI">{{__('Finnish (Finland)')}}</option>
                                         <option value="fr-CA">{{__('French (Canada)')}}</option>
-                                        <option value="fr-FR">{{__('French (France)')}}</option>
-                                        <option value="gl-ES">{{__('Galician (Spain)')}}</option>
-                                        <option value="de-DE">{{__('German (Germany)')}}</option>
-                                        <option value="el-GR">{{__('Greek (Greece)')}}</option>
-                                        <option value="gu-IN">{{__('Gujarati (India)')}}</option>
-                                        <option value="he-IL">{{__('Hebrew (Israel)')}}</option>
-                                        <option value="hi-IN">{{__('Hindi (India)')}}</option>
-                                        <option value="hu-HU">{{__('Hungarian (Hungary)')}}</option>
-                                        <option value="is-IS">{{__('Icelandic (Iceland)')}}</option>
-                                        <option value="id-ID">{{__('Indonesian (Indonesia)')}}</option>
-                                        <option value="it-IT">{{__('Italian (Italy)')}}</option>
-                                        <option value="ja-JP">{{__('Japanese (Japan)')}}</option>
-                                        <option value="kn-IN">{{__('Kannada (India)')}}</option>
-                                        <option value="ko-KR">{{__('Korean (South Korea)')}}</option>
-                                        <option value="lv-LV">{{__('Latvian (Latvia)')}}</option>
-                                        <option value="ms-MY">{{__('Malay (Malaysia)')}}</option>
-                                        <option value="ml-IN">{{__('Malayalam (India)')}}</option>
-                                        <option value="cmn-CN">{{__('Mandarin Chinese')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "fr") {{ 'selected' }} @endif value="fr-FR">{{__('French (France)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "gl") {{ 'selected' }} @endif value="gl-ES">{{__('Galician (Spain)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "de") {{ 'selected' }} @endif value="de-DE">{{__('German (Germany)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "el") {{ 'selected' }} @endif value="el-GR">{{__('Greek (Greece)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "gu") {{ 'selected' }} @endif value="gu-IN">{{__('Gujarati (India)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "he") {{ 'selected' }} @endif value="he-IL">{{__('Hebrew (Israel)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "hi") {{ 'selected' }} @endif value="hi-IN">{{__('Hindi (India)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "hu") {{ 'selected' }} @endif value="hu-HU">{{__('Hungarian (Hungary)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "is") {{ 'selected' }} @endif value="is-IS">{{__('Icelandic (Iceland)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "id") {{ 'selected' }} @endif value="id-ID">{{__('Indonesian (Indonesia)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "it") {{ 'selected' }} @endif value="it-IT">{{__('Italian (Italy)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "ja") {{ 'selected' }} @endif value="ja-JP">{{__('Japanese (Japan)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "kn") {{ 'selected' }} @endif value="kn-IN">{{__('Kannada (India)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "ko") {{ 'selected' }} @endif value="ko-KR">{{__('Korean (South Korea)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "lv") {{ 'selected' }} @endif value="lv-LV">{{__('Latvian (Latvia)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "ms") {{ 'selected' }} @endif value="ms-MY">{{__('Malay (Malaysia)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "ml") {{ 'selected' }} @endif value="ml-IN">{{__('Malayalam (India)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "cmn") {{ 'selected' }} @endif value="cmn-CN">{{__('Mandarin Chinese')}}</option>
                                         <option value="cmn-TW">{{__('Mandarin Chinese (T)')}}</option>
-                                        <option value="mr-IN">{{__('Marathi (India)')}}</option>
-                                        <option value="nb-NO">{{__('Norwegian (Norway)')}}</option>
-                                        <option value="pl-PL">{{__('Polish (Poland)')}}</option>
-                                        <option value="pt-BR">{{__('Portuguese (Brazil)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "mr") {{ 'selected' }} @endif value="mr-IN">{{__('Marathi (India)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "nb") {{ 'selected' }} @endif value="nb-NO">{{__('Norwegian (Norway)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "pl") {{ 'selected' }} @endif value="pl-PL">{{__('Polish (Poland)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "pt") {{ 'selected' }} @endif value="pt-BR">{{__('Portuguese (Brazil)')}}</option>
                                         <option value="pt-PT">{{__('Portuguese (Portugal)')}}</option>
-                                        <option value="pa-IN">{{__('Punjabi (India)')}}</option>
-                                        <option value="ro-RO">{{__('Romanian (Romania)')}}</option>
-                                        <option value="ru-RU">{{__('Russian (Russia)')}}</option>
-                                        <option value="sr-RS">{{__('Serbian (Cyrillic)')}}</option>
-                                        <option value="sk-SK">{{__('Slovak (Slovakia)')}}</option>
-                                        <option value="es-ES">{{__('Spanish (Spain)')}}</option>
-                                        <option value="es-US">{{__('Spanish (US)')}}</option>
-                                        <option value="sv-SE">{{__('Swedish (Sweden)')}}</option>
-                                        <option value="ta-IN">{{__('Tamil (India)')}}</option>
-                                        <option value="te-IN">{{__('Telugu (India)')}}</option>
-                                        <option value="th-TH">{{__('Thai (Thailand)')}}</option>
-                                        <option value="tr-TR">{{__('Turkish (Turkey)')}}</option>
-                                        <option value="uk-UA">{{__('Ukrainian (Ukraine)')}}</option>
-                                        <option value="vi-VN">{{__('Vietnamese (Vietnam)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "pa") {{ 'selected' }} @endif value="pa-IN">{{__('Punjabi (India)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "ro") {{ 'selected' }} @endif value="ro-RO">{{__('Romanian (Romania)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "ru") {{ 'selected' }} @endif value="ru-RU">{{__('Russian (Russia)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "sr") {{ 'selected' }} @endif value="sr-RS">{{__('Serbian (Cyrillic)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "sk") {{ 'selected' }} @endif value="sk-SK">{{__('Slovak (Slovakia)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "es") {{ 'selected' }} @endif value="es-ES">{{__('Spanish (Spain)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "es") {{ 'selected' }} @endif value="es-US">{{__('Spanish (US)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "sv") {{ 'selected' }} @endif value="sv-SE">{{__('Swedish (Sweden)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "ta") {{ 'selected' }} @endif value="ta-IN">{{__('Tamil (India)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "te") {{ 'selected' }} @endif value="te-IN">{{__('Telugu (India)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "th") {{ 'selected' }} @endif value="th-TH">{{__('Thai (Thailand)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "tr") {{ 'selected' }} @endif value="tr-TR">{{__('Turkish (Turkey)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "uk") {{ 'selected' }} @endif value="uk-UA">{{__('Ukrainian (Ukraine)')}}</option>
+                                        <option @if(LaravelLocalization::getCurrentLocale() == "vi") {{ 'selected' }} @endif value="vi-VN">{{__('Vietnamese (Vietnam)')}}</option>
                                     </select>
                                 </div>
                                 <div class="grow">

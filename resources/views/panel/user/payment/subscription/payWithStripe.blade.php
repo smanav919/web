@@ -140,7 +140,7 @@
 		(() => {
 			"use strict";
 
-			const stripe = Stripe("{{ $gateway->mode == 'sandbox' ? $gateway->sandbox_client_id : $gateway->live_client_id }}");
+			const stripe = Stripe("{{ $gateway->mode == 'live' ? $gateway->live_client_id : $gateway->sandbox_client_id }}");
 
 			const elements = stripe.elements();
 
@@ -170,15 +170,21 @@
 				if(error) {
 					cardButton.disabled = false
 					cardButton.innerHTML = 'Pay with Stripe'
-
 					toastr.error(error.message);
 				} else {
-					let token = document.createElement('input')
-					token.setAttribute('type', 'hidden')
-					token.setAttribute('name', 'token')
-					token.setAttribute('value', setupIntent.payment_method)
-					form.appendChild(token)
-					form.submit();
+                    if(setupIntent.status === 'incomplete'){
+                        cardButton.disabled = false;
+                        cardButton.innerHTML = 'Pay with Stripe';
+                        toastr.error('Payment is incomplete. Please try again.');
+                    }else{
+                        let token = document.createElement('input')
+                        token.setAttribute('type', 'hidden')
+                        token.setAttribute('name', 'token')
+                        token.setAttribute('value', setupIntent.payment_method)
+                        form.appendChild(token)
+                        form.submit();
+                    }
+					
 				}
 			})
 		})();

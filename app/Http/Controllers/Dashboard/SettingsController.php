@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Models\SettingTwo;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use OpenAI\Laravel\Facades\OpenAI;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
+use Illuminate\Support\Facades\Http;
 
 class SettingsController extends Controller
 {
@@ -120,6 +122,10 @@ class SettingsController extends Controller
         return view('panel.admin.settings.openai');
     }
 
+    public function stablediffusion(){
+        return view('panel.admin.settings.stablediffusion');
+    }
+
     public function openaiTest(){
         $client = new Client();
         $settings = Setting::first();
@@ -156,8 +162,60 @@ class SettingsController extends Controller
         }
     }
 
+    public function stablediffusionTest(){
+        $client = new Client();
+        $settings = SettingTwo::first();
+        if ($settings->stable_diffusion_api_key == "") {
+            echo "You must provide Stable Difussion API key.";
+            return;
+        }
+
+        $apiKeys = explode(',',$settings->stable_diffusion_api_key);
+        
+        foreach ($apiKeys as $apiKey){
+
+            $client = new Client([
+                'base_uri' => 'https://stablediffusionapi.com',
+                'headers' => [
+                    'Content-Type' => 'application/json'
+                ],
+            ]);
+            $prompt = 'Man on the mountain';
+
+            try {
+                // print_r($client); exit;
+                $response = $client->post('/api/v3/text2img', [
+                    'json' => [
+                        'key' => $apiKey,
+                        'prompt' => $prompt,
+                        "negative_prompt" => null, 
+                        'width' => 512,
+                        'height' => 512,
+                        'samples' => 1,
+                        "num_inference_steps" => "20", 
+                        "seed" => null, 
+                        "guidance_scale" => 7.5, 
+                        "safety_checker" => "yes", 
+                        "multi_lingual" => "no", 
+                        "panorama" => "no", 
+                        "self_attention" => "no", 
+                        "upscale" => "no", 
+                        "embeddings_model" => null, 
+                        "webhook" => null, 
+                        "track_id" => null 
+                    ],
+                ]);
+                echo ' <br>'.$apiKey.' - SUCCESS <br>';
+            } catch (\Exception $e) {
+                // API çağrısı başarısız oldu veya hata aldınız.
+                echo $e->getMessage().' - '.$apiKey.' -FAILED <br>';
+            }
+        }
+    }
+   
     public function openaiSave(Request $request){
         $settings = Setting::first();
+        $settings_two = SettingTwo::first();
         // TODO SETTINGS
         if (env('APP_STATUS') != 'Demo'){
         $settings->openai_api_secret = $request->openai_api_secret;
@@ -167,6 +225,20 @@ class SettingsController extends Controller
         $settings->openai_default_creativity = $request->openai_default_creativity;
         $settings->openai_max_input_length = $request->openai_max_input_length;
         $settings->openai_max_output_length = $request->openai_max_output_length;
+        $settings_two->openai_default_stream_server = $request->openai_default_stream_server;
+        $settings->save();
+        $settings_two->save();
+
+        }
+        return response()->json([], 200);
+    }
+
+    public function stablediffusionSave(Request $request){
+        $settings = SettingTwo::first();
+        // TODO SETTINGS
+        if (env('APP_STATUS') != 'Demo'){
+        $settings->stable_diffusion_api_key = $request->stable_diffusion_api_key;
+        $settings->stablediffusion_default_language = $request->stablediffusion_default_language;
         $settings->save();
         }
         return response()->json([], 200);
@@ -311,4 +383,17 @@ class SettingsController extends Controller
         return response()->json([], 200);
     }
 
+    public function storage(){
+        return view('panel.admin.settings.storage');
+    }
+
+    public function storagesave(Request $request){
+        // TODO SETTINGS
+        if (env('APP_STATUS') != 'Demo') {
+            $settings_two = SettingTwo::first();
+            $settings_two->ai_image_storage = $request->ai_image_storage;
+            $settings_two->save();
+        }
+        return response()->json([], 200);
+    }
 }

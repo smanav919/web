@@ -22,6 +22,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Carbon\Carbon;
@@ -1031,7 +1032,7 @@ class PaypalController extends Controller
             }
 
         } catch (\Exception $th) {
-            error_log("PaypalController::verifyIncomingJson(): ".$th->getMessage());
+            error_log("(Webhooks) PaypalController::verifyIncomingJson(): ".$th->getMessage());
         }
 
         return false;
@@ -1118,7 +1119,15 @@ class PaypalController extends Controller
 
         $provider = self::getPaypalProvider();
 
-        return $provider->simulateWebhookEvent($testJson);
+        // return $provider->simulateWebhookEvent($testJson);
+
+        $filters = [
+            'start_date'     => Carbon::now()->subDays(7)->toIso8601String(),
+            'end_date'       => Carbon::now()->addDays(2)->toIso8601String(),
+        ];
+
+        return $provider->listTransactions($filters);
+
 
     }
 

@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\EmailTemplates;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -19,7 +20,7 @@ class ConfirmationEmail extends Mailable implements ShouldQueue
      * Create a new message instance.
      */
     public function __construct(
-        public User $user, public Setting $settings
+        public User $user, public Setting $settings, public $template
     ) {}
 
     /**
@@ -27,8 +28,9 @@ class ConfirmationEmail extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
+        $template = $this->template;
         return new Envelope(
-            subject: 'Confirmation Email',
+            subject: $template->subject,
         );
     }
 

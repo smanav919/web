@@ -2,7 +2,7 @@ function editWorkbook( workbook_slug ) {
 	"use strict";
 
 	document.getElementById( "workbook_button" ).disabled = true;
-	document.getElementById( "workbook_button" ).innerHTML = "Please Wait";
+	document.getElementById( "workbook_button" ).innerHTML = magicai_localize.please_wait;
 	document.querySelector( '#app-loading-indicator' )?.classList?.remove( 'opacity-0' );
 	tinyMCE.get( "workbook_text" ).save();
 
@@ -49,7 +49,6 @@ document.addEventListener( "DOMContentLoaded", function () {
 		toolbar: 'styles | forecolor backcolor emoticons | bold italic underline | link | bullist numlist | alignleft aligncenter alignright',
 		directionality: document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr'
 	};
-	console.log( document.documentElement.dir );
 	if ( localStorage.getItem( "tablerTheme" ) === 'dark' ) {
 		tinymceOptions.skin = 'oxide-dark';
 		tinymceOptions.content_css = 'dark';

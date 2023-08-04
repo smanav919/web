@@ -75,7 +75,7 @@
 									{{__('Total sales')}}
 								</p>
 								<h3 class="text-[20px] mb-0 flex items-center">
-									${{ number_format(cache('total_sales')) }}
+									{{ $currencySymbol }}{{ number_format(cache('total_sales')) }}
                                     {!! percentageChange(cache('sales_previous_week'), cache('sales_this_week')) !!}
                                 </h3>
 							</div>
@@ -299,8 +299,8 @@
 								</td>
 								<td class="w-1" colspan="3">
 									<span class="text-primary font-medium">{{@$order->plan->name ?? 'Archived Plan'}}</span>
-									/<span class="text-[var(--lqd-heading-color)] !ms-1">{{@$order->plan->total_words ?? '-'}}</span>
-									/<span class="text-[var(--lqd-heading-color)] !ms-1">{{@$order->plan->total_images ?? '-'}}</span>
+									/<span class="text-[var(--lqd-heading-color)] !ms-1">{{@$order->plan->total_words === "-1" ? __('Unlimited') : (@$order->plan->total_words ?? '-')}}</span>
+									/<span class="text-[var(--lqd-heading-color)] !ms-1">{{@$order->plan->total_words === "-1" ? __('Unlimited') : (@$order->plan->total_words ?? '-')}}</span>
 								</td>
 							</tr>
 							@endforeach

@@ -1,3 +1,5 @@
+const streamUrl = $( 'meta[name=stream-url]' ).attr( 'content' );
+
 $( document ).ready( function () {
 	"use strict";
 	updateChatButtons()
@@ -54,7 +56,6 @@ $( document ).ready( function () {
 					}
 				},
 			} );
-			return false;
 		}
 
 	}
@@ -203,6 +204,7 @@ function makeDocumentReadyAgain() {
 
 		}
 
+		$( '.chat-list-ul' ).off( 'click', '.chat-item-delete' );
 		$( '.chat-list-ul' ).on( 'click', '.chat-item-delete', ev => {
 			const button = ev.currentTarget;
 			const parent = button.closest( 'li' );
@@ -211,6 +213,7 @@ function makeDocumentReadyAgain() {
 			deleteChatItem( chatId, chatTitle );
 		} );
 
+		$( '.chat-list-ul' ).off( 'click', '.chat-item-update-title' );
 		$( '.chat-list-ul' ).on( 'click', '.chat-item-update-title', ev => {
 			const button = ev.currentTarget;
 			const parent = button.closest( '.chat-list-item' );
@@ -281,22 +284,30 @@ function makeDocumentReadyAgain() {
 }
 
 
-
+function escapeHtml( html ) {
+	var text = document.createTextNode( html );
+	var div = document.createElement( 'div' );
+	div.appendChild( text );
+	return div.innerHTML;
+}
 
 function updateChatButtons() {
 	setTimeout( function () {
-		const prompt_prefix = document.getElementById( "prompt_prefix" ).value;
 		const generateBtn = document.getElementById( "send_message_button" );
 		const stopBtn = document.getElementById( "stop_button" );
 		const promptInput = document.getElementById( "prompt" );
 		let controller = null; // Store the AbortController instance
 		let scrollLocked = false;
+		let nIntervId = null;
+		let chunk = [];
+		let streaming = true;
 
 		const generate = async ( ev ) => {
 			"use strict";
 			ev?.preventDefault();
 			// Alert the user if no prompt value
-			if ( !promptInput.value || promptInput.value.length === 0 || promptInput.value.replace( /\s/g, '' ) === '' ) {
+			const promptInputValue = promptInput.value;
+			if ( !promptInputValue || promptInputValue.length === 0 || promptInputValue.replace( /\s/g, '' ) === '' ) {
 				return toastr.error( 'Please fill the message field.' );
 			}
 
@@ -317,7 +328,8 @@ function updateChatButtons() {
 			generateBtn.disabled = true;
 			generateBtn.classList.add( 'submitting' );
 			stopBtn.disabled = false;
-			userBubbleTemplate.querySelector( '.chat-content' ).innerHTML = promptInput.value;
+			userBubbleTemplate.querySelector( '.chat-content' ).innerHTML = promptInputValue;
+			promptInput.value = '';
 			chatsContainer.append( userBubbleTemplate );
 
 			// Create a new AbortController instance
@@ -335,7 +347,7 @@ function updateChatButtons() {
 
 			messages.push( {
 				role: "user",
-				content: prompt_prefix + ' ' + promptInput.value
+				content: promptInputValue
 			} );
 
 			let guest_id2 = atob( guest_id );
@@ -358,103 +370,145 @@ function updateChatButtons() {
 
 			chatsContainer[ 0 ].addEventListener( 'scroll', onWindowScroll );
 
-			try {
-				// Fetch the response from the OpenAI API with the signal from AbortController
-				const response = await fetch( guest_id2, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${ bearer }`,
-					},
-					body: JSON.stringify( {
-						model: "gpt-3.5-turbo",
-						messages: messages,
-						max_tokens: 500,
-						stream: true, // For streaming responses
-					} ),
-					signal, // Pass the signal to the fetch request
+			// started eventSource
+			const prompt = document.getElementById( "prompt" ).value;
+			
+			chunk = [];
+			streaming = true;
+			nIntervId = setInterval( function () {
+				if ( chunk.length == 0 && !streaming ) {
+					messages.push( {
+						role: "assistant",
+						content: aiBubbleWrapper.querySelector( '.chat-content' ).innerHTML
+					} );
+
+					saveResponse( promptInputValue, aiBubbleWrapper.querySelector( '.chat-content' ).innerHTML, chat_id )
+
+					generateBtn.disabled = false;
+					generateBtn.classList.remove( 'submitting' );
+					aiBubbleWrapper.classList.remove( 'loading' );
+					stopBtn.disabled = true;
+					controller = null; // Reset the AbortController instance
+
+					jQuery( ".chats-container" ).stop().animate( { scrollTop: jQuery( ".chats-container" )[ 0 ]?.scrollHeight }, 200 );
+					jQuery( "#scrollable_content" ).stop().animate( { scrollTop: jQuery( "#scrollable_content" ).outerHeight() }, 200 );
+
+					window.removeEventListener( 'beforeunload', onBeforePageUnload );
+					chatsContainer[ 0 ].removeEventListener( 'scroll', onWindowScroll );
+					clearInterval( nIntervId );
+				}
+
+				const text = chunk.shift();
+				if ( text ) {
+					aiBubbleWrapper.classList.remove( 'loading' );
+					aiBubbleWrapper.querySelector( '.chat-content' ).innerHTML += text;
+					chatsContainer[ 0 ].scrollTo( 0, chatsContainer[ 0 ].scrollHeight );
+				}
+
+			}, 20 );
+			
+			if (stream_type == 'backend') {
+				const eventSource = new EventSource( `${ streamUrl }/?message=${ promptInputValue }&category=${category.id}` );
+
+				eventSource.addEventListener( 'data', function ( event ) {
+					const data = JSON.parse( event.data );
+					if ( data.message !== null )
+						chunk.push( data.message);
 				} );
-
-				// Read the response as a stream of data
-				const reader = response.body.getReader();
-				const decoder = new TextDecoder( "utf-8" );
-				let result = '';
-
-				while ( true ) {
-					// if ( window.console || window.console.firebug ) {
-					// 	console.clear();
-					// }
-					const { done, value } = await reader.read();
-					if ( done ) {
-						break;
-					}
-					// Massage and parse the chunk of data
-					const chunk = decoder.decode( value );
-
-					const lines = chunk.split( "\n" );
-
-                    console.log('lines:'+lines);
-
+	
+				// finished eventSource
+				eventSource.addEventListener( 'stop', function ( event ) {
+					streaming = false;
+					eventSource.close();
+				} );
+			} else {
 				try {
-                    const parsedLines = lines
-                        .map( ( line ) => line.replace( /^data: /, "" ).trim() ) // Remove the "data: " prefix
-                        .filter( ( line ) => line !== "" && line !== "[DONE]" ) // Remove empty lines and "[DONE]"
-                        .map( ( line ) => JSON.parse( line ) ); // Parse the JSON string
+					// console.log(messages);
+					// Fetch the response from the OpenAI API with the signal from AbortController
+					const response = await fetch(guest_id2, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${bearer}`,
+						},
+						body: JSON.stringify({
+							model: "gpt-3.5-turbo-16k",
+							messages: messages,
+							max_tokens: 2000,
+							stream: true, // For streaming responses
+						}),
+						signal, // Pass the signal to the fetch request
+					});
+					
+					if(response.status != 200) {
+						throw response;
+					}
+					// Read the response as a stream of data
+					const reader = response.body.getReader();
+					const decoder = new TextDecoder("utf-8");
+					let result = '';
 
-                    for ( const parsedLine of parsedLines ) {
-                        const { choices } = parsedLine;
-                        const { delta } = choices[ 0 ];
-                        const { content } = delta;
-                        // Update the UI with the new content
+					while (true) {
+						// if ( window.console || window.console.firebug ) {
+						// 	console.clear();
+						// }
+						const { done, value } = await reader.read();
+						if (done) {
+							streaming = false;
+							break;
+						}
+						// Massage and parse the chunk of data
+						const chunk1 = decoder.decode(value);
+						const lines = chunk1.split("\n");
+				
+						const parsedLines = lines
+							.map((line) => line.replace(/^data: /, "").trim()) // Remove the "data: " prefix
+							.filter((line) => line !== "" && line !== "[DONE]") // Remove empty lines and "[DONE]"
+							.map((line) => {
+								try {
+									return JSON.parse(line);
+								} catch (ex) {
+									console.log(line);
+								}
+								return null;
+							}); // Parse the JSON string
+						
+						for (const parsedLine of parsedLines) {
+							if (!parsedLine) continue;
+							const { choices } = parsedLine;
+							const { delta } = choices[0];
+							const { content } = delta;
+							// const { finish_reason } = choices[0];
 
-                        if ( content ) {
-                            aiBubbleWrapper.classList.remove( 'loading' );
-                            result += content.replace( /(?:\r\n|\r|\n)/g, ' <br> ' );
+							if (content) {
+								chunk.push(content);
+							}
+						}
+					}
 
-                            aiBubbleWrapper.querySelector( '.chat-content' ).innerHTML = result;
-
-                            scrollLocked && chatsContainer[ 0 ].scrollTo( 0, chatsContainer[ 0 ].scrollHeight );
-                        }
-                    }
-                    }catch (error){
-                    }
+				} catch ( error ) {
+					// Handle fetch request errors
+					console.log("Error:", error);
+					if (signal.aborted) {
+						aiBubbleWrapper.querySelector('.chat-content').innerHTML = "Request aborted by user. Not saved.";
+						generateBtn.disabled = false;
+						generateBtn.classList.remove('submitting');
+						document.getElementById("chat_form").reset();
+					} else {
+						console.log("Error:", error);
+						switch(error.status) {
+							case 429:
+								aiBubbleWrapper.querySelector('.chat-content').innerHTML = "Api Connection Error. You hit the rate limites of openai requests. Please check your Openai API Key.";
+								break;
+							default:
+								aiBubbleWrapper.querySelector('.chat-content').innerHTML = "Api Connection Error. Please contact system administrator via Support Ticket. Error is: API Connection failed due to API keys.";
+						}
+						generateBtn.disabled = false;
+						generateBtn.classList.remove('submitting');
+						document.getElementById("chat_form").reset();
+						streaming = false
+					}
 				}
-
-			} catch ( error ) {
-				// Handle fetch request errors
-                console.log( "Error:", error );
-				if ( signal.aborted ) {
-					aiBubbleWrapper.querySelector( '.chat-content' ).innerHTML = "Request aborted by user. Not saved.";
-					generateBtn.disabled = false;
-					generateBtn.classList.remove( 'submitting' );
-					document.getElementById( "chat_form" ).reset();
-				} else {
-					console.log( "Error:", error );
-					aiBubbleWrapper.querySelector( '.chat-content' ).innerHTML = "Api Connection Error. Please contact system administrator via Support Ticket. Error is: API Connection failed due to API keys.";
-					generateBtn.disabled = false;
-					generateBtn.classList.remove( 'submitting' );
-					document.getElementById( "chat_form" ).reset();
-				}
-			} finally {
-				messages.push( {
-					role: "assistant",
-					content: aiBubbleWrapper.querySelector( '.chat-content' ).innerHTML
-				} );
-
-				saveResponse( promptInput.value, aiBubbleWrapper.querySelector( '.chat-content' ).innerHTML, chat_id )
-
-				promptInput.value = '';
-				generateBtn.disabled = false;
-				generateBtn.classList.remove( 'submitting' );
-				aiBubbleWrapper.classList.remove( 'loading' );
-				stopBtn.disabled = true;
-				controller = null; // Reset the AbortController instance
-
-				jQuery( ".chats-container" ).stop().animate( { scrollTop: jQuery( ".chats-container" )[ 0 ]?.scrollHeight }, 200 );
-				jQuery( "#scrollable_content" ).stop().animate( { scrollTop: jQuery( "#scrollable_content" ).outerHeight() }, 200 );
-
-				window.removeEventListener( 'beforeunload', onBeforePageUnload );
-				chatsContainer[ 0 ].removeEventListener( 'scroll', onWindowScroll );
 			}
 		};
 
@@ -463,6 +517,8 @@ function updateChatButtons() {
 			if ( controller ) {
 				controller.abort();
 				controller = null;
+				chunk = [];
+				streaming = false;
 			}
 		};
 		promptInput.addEventListener( 'keypress', ev => {

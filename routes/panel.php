@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdvertisController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Dashboard\AdminController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\AIController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Gateways\StripeController;
 use App\Http\Controllers\Gateways\PaypalController;
+use App\Http\Controllers\Gateways\YokassaController;
 use App\Http\Controllers\Dashboard\SupportController;
 use App\Http\Controllers\Dashboard\SettingsController;
 use App\Http\Controllers\Dashboard\SearchController;
@@ -15,15 +17,15 @@ use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use App\Http\Controllers\AIChatController;
 use App\Http\Controllers\GatewayController;
 use Illuminate\Support\Facades\App;
-use Spatie\Health\Http\Controllers\HealthCheckResultsController;
 use Spatie\Health\ResultStores\ResultStore;
 use Spatie\Health\Commands\RunHealthChecksCommand;
 use Carbon\Carbon;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\EmailTemplatesController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\GoogleTTSController;
 
-
-Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'localeSessionRedirect', 'localizationRedirect', 'localeViewPath' ]], function() {
+Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['localeSessionRedirect', 'localizationRedirect', 'localeViewPath']], function () {
     Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(function () {
 
         Route::get('/', [UserController::class, 'redirect'])->name('index');
@@ -34,7 +36,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'l
 
             //Openai generator
             Route::prefix('openai')->name('openai.')->group(function () {
-                Route::get('/', [UserController::class, 'openAIList'])->name('list');
+                Route::get('/', [UserController::class, 'openAIList'])->name('list')->middleware('hasTokens');
                 Route::get('/favorite-openai', [UserController::class, 'openAIFavoritesList'])->name('list.favorites');
                 Route::post('/favorite', [UserController::class, 'openAIFavorite']);
                 //Generators
@@ -46,6 +48,9 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'l
                 //Generators Generate
                 Route::post('/generate', [AIController::class, 'buildOutput']);
                 Route::get('/generate', [AIController::class, 'streamedTextOutput']);
+                Route::get('/generate/lazyload', [AIController::class, 'lazyLoadImage'])->name('lazyloadimage');
+
+                Route::get('/stream', [AIController::class, 'stream'])->name('stream');
 
                 //Low systems
                 Route::post('/low/generate_save', [AIController::class, 'lowGenerateSave']);
@@ -64,20 +69,22 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'l
                 });
 
 
-                Route::prefix('chat')->name('chat.')->group(function () {
-                    Route::get('/ai-chat-list', [AIChatController::class, 'openAIChatList'])->name('list');
-                    Route::get('/ai-chat/{slug}', [AIChatController::class, 'openAIChat'])->name('chat');
-                    Route::match(['get', 'post'],'/chat-send', [AIChatController::class, 'chatOutput']);
-                    Route::post('/open-chat-area-container', [AIChatController::class, 'openChatAreaContainer']);
-                    Route::post('/start-new-chat', [AIChatController::class, 'startNewChat']);
-                    Route::post('/search', [AIChatController::class, 'search']);
-                    Route::post('/delete-chat', [AIChatController::class, 'deleteChat']);
-                    Route::post('/rename-chat', [AIChatController::class, 'renameChat']);
+                Route::middleware('hasTokens')->group(function () {
+                    Route::prefix('chat')->name('chat.')->group(function () {
+                        Route::get('/ai-chat-list', [AIChatController::class, 'openAIChatList'])->name('list');
+                        Route::get('/ai-chat/{slug}', [AIChatController::class, 'openAIChat'])->name('chat');
+                        Route::get('/stream', [AIController::class, 'chatStream'])->name('stream');
+                        Route::match(['get', 'post'], '/chat-send', [AIChatController::class, 'chatOutput']);
+                        Route::post('/open-chat-area-container', [AIChatController::class, 'openChatAreaContainer']);
+                        Route::post('/start-new-chat', [AIChatController::class, 'startNewChat']);
+                        Route::post('/search', [AIChatController::class, 'search']);
+                        Route::post('/delete-chat', [AIChatController::class, 'deleteChat']);
+                        Route::post('/rename-chat', [AIChatController::class, 'renameChat']);
 
-                    //Low systems
-                    Route::post('/low/chat_save', [AIChatController::class, 'lowChatSave']);
+                        //Low systems
+                        Route::post('/low/chat_save', [AIChatController::class, 'lowChatSave']);
+                    });
                 });
-
             });
 
             // user profile settings
@@ -102,6 +109,8 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'l
 
                 Route::post('/stripe/subscribePay', [StripeController::class, 'subscribePay'])->name('stripeSubscribePay');
                 Route::post('/stripe/prepaidPay', [StripeController::class, 'prepaidPay'])->name('stripePrepaidPay');
+                Route::post('/yokassa/subscribePay', [YokassaController::class, 'subscribePay'])->name('YokassaSubscribePay');
+                Route::post('/yokassa/prepaidPay', [YokassaController::class, 'prepaidPay'])->name('YokassaPrepaidPay');
 
                 Route::post('/paypal/create-paypal-order', [PaypalController::class, 'createPayPalOrder'])->name('createPayPalOrder');
                 Route::post('/paypal/capture-paypal-order', [PaypalController::class, 'capturePayPalOrder'])->name('capturePayPalOrder');
@@ -123,10 +132,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'l
                 Route::post('/send-invitation', [UserController::class, 'affiliatesListSendInvitation']);
                 Route::post('/send-request', [UserController::class, 'affiliatesListSendRequest']);
             });
-
-
-
-
         });
 
 
@@ -146,6 +151,7 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'l
             Route::prefix('openai')->name('openai.')->group(function () {
                 Route::get('/', [AdminController::class, 'openAIList'])->name('list');
                 Route::post('/update-status', [AdminController::class, 'openAIListUpdateStatus']);
+                Route::post('/update-package-status', [AdminController::class, 'openAIListUpdatePackageStatus']);
 
                 Route::prefix('custom')->name('custom.')->group(function () {
                     Route::get('/', [AdminController::class, 'openAICustomList'])->name('list');
@@ -222,6 +228,10 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'l
                 Route::get('/openai/test', [SettingsController::class, 'openaiTest'])->name('openai.test');
                 Route::post('/openai-save', [SettingsController::class, 'openaiSave']);
 
+                Route::get('/stablediffusion', [SettingsController::class, 'stablediffusion'])->name('stablediffusion');
+                Route::get('/stablediffusion/test', [SettingsController::class, 'stablediffusionTest'])->name('stablediffusion.test');
+                Route::post('/stablediffusion-save', [SettingsController::class, 'stablediffusionSave']);
+
                 Route::get('/tts', [SettingsController::class, 'tts'])->name('tts');
                 Route::post('/tts-save', [SettingsController::class, 'ttsSave']);
 
@@ -243,6 +253,9 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'l
 
                 Route::get('/privacy', [SettingsController::class, 'privacy'])->name('privacy');
                 Route::post('/privacy-save', [SettingsController::class, 'privacySave']);
+
+                Route::get('/storage', [SettingsController::class, 'storage'])->name('storage');
+                Route::post('/storage-save', [SettingsController::class, 'storagesave']);
             });
 
             //Affiliates
@@ -302,8 +315,9 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'l
                     Route::get('/action/delete/{id}', [AdminController::class, 'frontendGeneratorlistDelete'])->name('delete');
                     Route::post('/action/save', [AdminController::class, 'frontendGeneratorlistCreateOrUpdateSave']);
                 });
-
             });
+
+            Route::resource('advertis', AdvertisController::class)->parameter('advertis', 'advertis');
 
             //Update
             Route::prefix('update')->name('update.')->group(function () {
@@ -327,7 +341,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'l
                     ]);
                 })->name('index');
             });
-
         });
 
         //Support Area
@@ -348,16 +361,27 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'l
             Route::post('/save', [PageController::class, 'pageAddOrUpdateSave']);
         });
 
+        //Email Templates
+        Route::prefix('email-templates')->name('email-templates.')->group(function () {
+            Route::get('/', [EmailTemplatesController::class, 'templateList'])->name('list');
+            Route::get('/add-or-update/{id?}', [EmailTemplatesController::class, 'templateAddOrUpdate'])->name('addOrUpdate');
+            //Route::get('/delete/{id?}', [EmailTemplatesController::class, 'templateDelete'])->name('delete');
+            Route::post('/save', [EmailTemplatesController::class, 'templateAddOrUpdateSave']);
+        });
+        //Blog
+        Route::prefix('blog')->name('blog.')->group(function () {
+            Route::get('/', [BlogController::class, 'blogList'])->name('list');
+            Route::get('/add-or-update/{id?}', [BlogController::class, 'blogAddOrUpdate'])->name('addOrUpdate');
+            Route::get('/delete/{id?}', [BlogController::class, 'blogDelete'])->name('delete');
+            Route::post('/save', [BlogController::class, 'blogAddOrUpdateSave']);
+        });
+
         //Search
         Route::post('/api/search', [SearchController::class, 'search']);
-
-
-
-
     });
 
     // Override amamarul routes
-    Route::group(['prefix' => config('amamarul-location.prefix'), 'middleware' => config('amamarul-location.middlewares') ,'as' => 'amamarul.translations.'], function(){
+    Route::group(['prefix' => config('amamarul-location.prefix'), 'middleware' => config('amamarul-location.middlewares'), 'as' => 'amamarul.translations.'], function () {
         Route::get('/', '\Amamarul\LaravelJsonLocationsManager\Controllers\HomeController@index')->name('home');
         Route::get('lang/{lang}', '\Amamarul\LaravelJsonLocationsManager\Controllers\HomeController@lang')->name('lang');
         Route::get('lang/generateJson/{lang}', '\Amamarul\LaravelJsonLocationsManager\Controllers\HomeController@generateJson')->name('lang.generateJson');
@@ -367,43 +391,83 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => [ 'l
         Route::get('string/{code}', '\Amamarul\LaravelJsonLocationsManager\Controllers\HomeController@string')->name('lang.string');
         Route::get('publish-all', '\Amamarul\LaravelJsonLocationsManager\Controllers\HomeController@publishAll')->name('lang.publishAll');
         //Reinstall
-        Route::get('regenerate', function(){
-            $currentDate = date('Y_m_d_hms');
-            $newFileName = 'backup_' . $currentDate . '_locations.sqlite';
-            $oldFilePath = storage_path('amamarul-locations/locations.sqlite');
-            $newFilePath = storage_path('amamarul-locations/' . $newFileName);
-
-            rename($oldFilePath, $newFilePath);
-
-            //commands here
+        Route::get('regenerate', function () {
+            rename(
+                storage_path('amamarul-locations/locations.sqlite'),
+                storage_path('amamarul-locations/' . 'backup_' . date('Y_m_d_hms') . '_locations.sqlite')
+            );
             Artisan::call('amamarul:location:install');
             return redirect()->route('amamarul.translations.home')->with(config('amamarul-location.message_flash_variable'), __('Language files regenerated!'));
-
         })->name('lang.reinstall');
+        //setLocale
+        Route::get('setLocale', function (\Illuminate\Http\Request $request) {
+            $settings_two = \App\Models\SettingTwo::first();
+            $settings_two->languages_default = $request->setLocale;
+            $settings_two->save();
+            LaravelLocalization::setLocale($request->setLocale);
+            return redirect()->route('amamarul.translations.home', [$request->setLocale])->with(config('amamarul-location.message_flash_variable'), $request->setLocale);
+        })->name('lang.setLocale');
     });
+
     Route::post('translations/lang/update/{id}', '\Amamarul\LaravelJsonLocationsManager\Controllers\HomeController@update')->name('amamarul.translations.lang.update');
-    Route::post('translations/lang/update-all', function(\Illuminate\Http\Request $request){
-        
+    Route::post('translations/lang/update-all', function (\Illuminate\Http\Request $request) {
+
         $json = json_decode($request->data, true);
         $column_name = $request->lang;
 
-        foreach( $json as $code => $column_value ) {
-            ++$code;
-            $test = \Amamarul\LaravelJsonLocationsManager\Models\Strings::select()
-                ->where('code', '=', $code)
-                ->update([$column_name => $column_value]);
+        if ( $column_name == 'edit' ){
+            foreach ($json as $code => $column_value) {
+                ++$code;
+
+                // if (empty($column_value)) {
+                //     $column_value = \Amamarul\LaravelJsonLocationsManager\Models\Strings::select('en')
+                //         ->where('code', '=', $code)
+                //         ->value('en');
+                // }
+
+                $test = \Amamarul\LaravelJsonLocationsManager\Models\Strings::where('code', '=', $code)
+                    ->update([$column_name => $column_value]);
+            }
+        } else {
+            foreach ($json as $code => $column_value) {
+                ++$code;
+                $test = \Amamarul\LaravelJsonLocationsManager\Models\Strings::select()
+                    ->where('code', '=', $code)
+                    ->update([$column_name => $column_value]);
+            }
         }
 
         $lang = $column_name;
-        $list = \Amamarul\LaravelJsonLocationsManager\Models\Strings::pluck($lang,'en');
+        $list = \Amamarul\LaravelJsonLocationsManager\Models\Strings::pluck($lang, 'en');
         $new_json = json_encode_prettify($list);
 
         $filesystem = new \Illuminate\Filesystem\Filesystem;
-
-        $filesystem->put(base_path('lang/'.$lang.'.json'),$new_json);
-        return response()->json([ 'code' => 200 ], 200);
-
+        $filesystem->put(base_path('lang/' . $lang . '.json'), $new_json);
+        if ( $column_name == 'edit' ){
+            $lang = $column_name == 'edit' ? 'en' : $column_name;
+            $filesystem->put(base_path('lang/' . $lang . '.json'), $new_json);
+        }
+        return response()->json(['code' => 200], 200);
     })->name('amamarul.translations.lang.update-all');
 
+    Route::post('translations/lang-save', function (\Illuminate\Http\Request $request) {
+
+        $settings_two = \App\Models\SettingTwo::first();
+        $codes = explode(',', $settings_two->languages);
+
+        if ($request->state) {
+            if (!in_array($request->lang, $codes)) {
+                $codes[] = $request->lang;
+            }
+        } else {
+            if (in_array($request->lang, $codes)) {
+                unset($codes[array_search($request->lang, $codes)]);
+            }
+        }
+        $settings_two->languages = implode(',', $codes);
+        $settings_two->save();
+        return response()->json(['code' => 200], 200);
+    })->name('amamarul.translations.lang.lang-save');
 });
+
 

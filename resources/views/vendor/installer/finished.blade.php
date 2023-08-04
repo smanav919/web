@@ -28,7 +28,7 @@
 	</div>
 
 	<a class="flex items-center justify-center p-2 gap-2 rounded-xl shadow-[0_4px_10px_rgba(0,0,0,0.05)] transition-all duration-300 font-medium hover:bg-black hover:text-white hover:scale-105" href="{{ url('/') }}">
-		{{__('Activate MagicAI')}}
+		{{__('Explore MagicAI')}}
 		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path d="M9 6l6 6l-6 6"></path> </svg>
 	</a>
 

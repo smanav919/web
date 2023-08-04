@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::table('settings', function (Blueprint $table) {
             $table->boolean('feature_ai_voiceover')->default(true)->nullable();
-            $table->string('gcs_file')->nullable();
-            $table->string('gcs_name')->nullable();
+            $table->text('gcs_file')->nullable();
+            $table->text('gcs_name')->nullable();
         });
     }
 
@@ -24,11 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('settings', function (Blueprint $table) {
-            $table->dropColumn([
-                'feature_ai_voiceover',
-                'gcs_file',
-                'gcs_name'
-            ]);
+            $table->dropColumn('feature_ai_voiceover');
+            $table->dropColumn('gcs_file');
+            $table->dropColumn('gcs_name');
         });
     }
 };

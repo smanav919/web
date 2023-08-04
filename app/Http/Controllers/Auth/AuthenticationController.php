@@ -18,18 +18,20 @@ use Laravel\Socialite\Facades\Socialite;
 
 class AuthenticationController extends Controller
 {
-    public function githubCallback(){
+    public function githubCallback()
+    {
         $githubUser = Socialite::driver('github')->user();
         $settings = Setting::first();
 
         $checkUser = User::where('email', $githubUser->getEmail())->exists();
-        if ($checkUser){
+        if ($checkUser) {
             $user = User::where('email', $githubUser->getEmail())->first();
             $user->github_token = $githubUser->token;
             $user->github_refresh_token = $githubUser->refreshToken;
             $user->avatar = $githubUser->getAvatar();
+            $user->affiliate_code = $user->affiliate_code ?? Str::upper(Str::random(12));
             $user->save();
-        }else{
+        } else {
             $user = User::updateOrCreate([
                 'github_id' => $githubUser->id,
             ], [
@@ -39,9 +41,10 @@ class AuthenticationController extends Controller
                 'github_token' => $githubUser->token,
                 'github_refresh_token' => $githubUser->refreshToken,
                 'avatar' => $githubUser->getAvatar(),
-                'remaining_words' => explode(',',$settings->free_plan)[0],
-                'remaining_images' => explode(',',$settings->free_plan)[1],
+                'remaining_words' => explode(',', $settings->free_plan)[0],
+                'remaining_images' => explode(',', $settings->free_plan)[1] ?? 0,
                 'password' => Hash::make(Str::random(12)),
+                'affiliate_code' => Str::upper(Str::random(12)),
             ]);
         }
 
@@ -50,7 +53,8 @@ class AuthenticationController extends Controller
         return redirect('/dashboard/user');
     }
 
-    public function googleCallback(){
+    public function googleCallback()
+    {
         $googleUser = Socialite::driver('google')->user();
         $checkUser = User::where('email', $googleUser->getEmail())->exists();
         $settings = Setting::first();
@@ -64,6 +68,7 @@ class AuthenticationController extends Controller
             $user->google_token = $googleUser->token;
             $user->google_refresh_token = $googleUser->refreshToken;
             $user->avatar = $googleUser->getAvatar();
+            $user->affiliate_code = $user->affiliate_code ?? Str::upper(Str::random(12));
             $user->save();
         } else {
             $user = User::updateOrCreate([
@@ -75,9 +80,10 @@ class AuthenticationController extends Controller
                 'google_token' => $googleUser->token,
                 'google_refresh_token' => $googleUser->refreshToken,
                 'avatar' => $googleUser->getAvatar(),
-                'remaining_words' => explode(',',$settings->free_plan)[0],
-                'remaining_images' => explode(',',$settings->free_plan)[1],
+                'remaining_words' => explode(',', $settings->free_plan)[0],
+                'remaining_images' => explode(',', $settings->free_plan)[1] ?? 0,
                 'password' => Hash::make(Str::random(12)),
+                'affiliate_code' => Str::upper(Str::random(12)),
             ]);
         }
 
@@ -86,7 +92,8 @@ class AuthenticationController extends Controller
         return redirect('/dashboard/user');
     }
 
-    public function facebookCallback(){
+    public function facebookCallback()
+    {
         $facebookUser = Socialite::driver('facebook')->user();
         $checkUser = User::where('email', $facebookUser->getEmail())->exists();
         $settings = Setting::first();
@@ -99,6 +106,7 @@ class AuthenticationController extends Controller
             $user = User::where('email', $facebookUser->getEmail())->first();
             $user->facebook_token = $facebookUser->token;
             $user->avatar = $facebookUser->getAvatar();
+            $user->affiliate_code = $user->affiliate_code ?? Str::upper(Str::random(12));
             $user->save();
         } else {
             $user = User::updateOrCreate([
@@ -109,9 +117,10 @@ class AuthenticationController extends Controller
                 'email' => $facebookUser->getEmail(),
                 'facebook_token' => $facebookUser->token,
                 'avatar' => $facebookUser->getAvatar(),
-                'remaining_words' => explode(',',$settings->free_plan)[0],
-                'remaining_images' => explode(',',$settings->free_plan)[1],
+                'remaining_words' => explode(',', $settings->free_plan)[0],
+                'remaining_images' => explode(',', $settings->free_plan)[1] ?? 0,
                 'password' => Hash::make(Str::random(12)),
+                'affiliate_code' => Str::upper(Str::random(12)),
             ]);
         }
 
@@ -130,7 +139,8 @@ class AuthenticationController extends Controller
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 
-    public function registerCreate(){
+    public function registerCreate()
+    {
         return view('panel.authentication.register');
     }
 
@@ -140,20 +150,20 @@ class AuthenticationController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'surname' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
         $affCode = null;
-        if ($request->affiliate_code != null){
+        if ($request->affiliate_code != null) {
             $affUser = User::where('affiliate_code', $request->affiliate_code)->first();
-            if ($affUser != null){
+            if ($affUser != null) {
                 $affCode = $affUser->id;
             }
         }
 
         //TODO DEMO
-        if (env('APP_STATUS') == 'Demo'){
+        if (env('APP_STATUS') == 'Demo') {
             $user = User::create([
                 'name' => $request->name,
                 'surname' => $request->surname,
@@ -166,15 +176,15 @@ class AuthenticationController extends Controller
                 'affiliate_id' => $affCode,
                 'affiliate_code' => Str::upper(Str::random(12)),
             ]);
-        }else{
+        } else {
             $settings = Setting::first();
             $user = User::create([
                 'name' => $request->name,
                 'surname' => $request->surname,
                 'email' => $request->email,
                 'email_confirmation_code' => Str::random(67),
-                'remaining_words' => explode(',',$settings->free_plan)[0],
-                'remaining_images' => explode(',',$settings->free_plan)[1],
+                'remaining_words' => explode(',', $settings->free_plan)[0],
+                'remaining_images' => explode(',', $settings->free_plan)[1] ?? 0,
                 'password' => Hash::make($request->password),
                 'email_verification_code' => Str::random(67),
                 'affiliate_id' => $affCode,
@@ -188,9 +198,9 @@ class AuthenticationController extends Controller
         dispatch(new SendConfirmationEmail($user));
 
         $settings = Setting::first();
-        if ($settings->login_without_confirmation == 1){
+        if ($settings->login_without_confirmation == 1) {
             Auth::login($user);
-        }else{
+        } else {
             $data = array(
                 'errors' => ['We have sent you an email for account confirmation. Please confirm your account to continue.'],
                 'type' => 'confirmation',
@@ -202,7 +212,8 @@ class AuthenticationController extends Controller
         return response()->json('OK', 200);
     }
 
-    public function PasswordResetCreate(){
+    public function PasswordResetCreate()
+    {
         return view('panel.authentication.password_reset');
     }
 }

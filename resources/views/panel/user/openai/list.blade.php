@@ -12,18 +12,35 @@
 				<h2 class="page-title mb-[22px]">
 					{{__('AI Writer')}}
 				</h2>
+				@php 
+					$filter_check = [];
+					foreach ($list as $item) {
+						if($item->active != 1){
+							continue;
+						}
+						if ( $item->filters ) {
+							foreach( explode(',', $item->filters) as $filter){
+								$filter_check[]=$filter;
+							}
+						}
+					}
+					$filter_check = array_unique($filter_check);
+				@endphp
 				<ul class="flex flex-wrap items-center m-0 p-0 list-none text-[13px] text-[#2B2F37] gap-[20px] max-sm:gap-[10px]">
 					<li>
 						<button data-filter-trigger="all" class="inline-flex leading-none p-[0.3em_0.65em] rounded-full bg-[transparent] border-0 text-inherit hover:no-underline hover:bg-[#f2f2f4] transition-colors [&.active]:bg-[#f2f2f4] dark:text-[--tblr-muted] dark:[&.active]:bg-[--lqd-faded-out] dark:[&.active]:text-[--lqd-heading-color] active">
-							All
+							{{__('All')}}
 						</button>
 					</li>
+					
 					@foreach($filters as $filter)
-					<li>
-						<button data-filter-trigger="{{$filter->name}}" class="inline-flex leading-none p-[0.3em_0.65em] rounded-full bg-[transparent] border-0 text-inherit hover:no-underline hover:bg-[#f2f2f4] transition-colors [&.active]:bg-[#f2f2f4] dark:text-[--tblr-muted] dark:[&.active]:bg-[--lqd-faded-out] dark:[&.active]:text-[--lqd-heading-color]">
-                            {{\Illuminate\Support\Str::ucfirst($filter->name)}}
-						</button>
-					</li>
+						@if(in_array($filter->name, $filter_check))
+							<li>
+								<button data-filter-trigger="{{$filter->name}}" class="inline-flex leading-none p-[0.3em_0.65em] rounded-full bg-[transparent] border-0 text-inherit hover:no-underline hover:bg-[#f2f2f4] transition-colors [&.active]:bg-[#f2f2f4] dark:text-[--tblr-muted] dark:[&.active]:bg-[--lqd-faded-out] dark:[&.active]:text-[--lqd-heading-color]">
+									{{\Illuminate\Support\Str::ucfirst($filter->name)}}
+								</button>
+							</li>
+                    	@endif
                     @endforeach
 				</ul>
 			</div>
@@ -34,10 +51,26 @@
 <div class="page-body mt-2 relative after:h-px after:w-full after:bg-[var(--tblr-body-bg)] after:absolute after:top-full after:left-0 after:-mt-px">
 	<div class="container-fluid">
 		<div class="row">
+
+			@php 
+				$plan = Auth::user()->activePlan();
+				$plan_type = 'regular';
+
+				if ( $plan != null ) {
+					$plan_type = strtolower($plan->plan_type);
+				}
+			@endphp
+
 			@foreach($list as $item)
-			@if($item->active != 1)
-				@continue
-			@endif
+				@if($item->active != 1)
+					@continue
+				@endif
+				@php
+					$upgrade = false;
+					if ( $item->premium == 1 && $plan_type === 'regular' ){
+						$upgrade = true;
+					}
+				@endphp
 			<div data-filter="{{$item->filters}}" class="col-lg-4 col-xl-3 col-md-6 pt-8 pb-10 px-16 relative border-[1px] border-solid border-t-0 border-s-0 border-[var(--tblr-border-color)] group max-xl:px-10">
 				<span class="avatar w-[43px] h-[43px] mb-[18px] [&_svg]:w-[20px] [&_svg]:h-[20px] relative transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg" style="background: {{$item->color}}">
 					@if ( $item->image !== 'none' )
@@ -65,6 +98,7 @@
 					</div>
 				</div>
 				@if($item->active == 1)
+				@if (!$upgrade)
 				<a onclick="return favoriteTemplate({{$item->id}});" id="favorite_area_{{$item->id}}" class="btn inline-flex items-center justify-center w-[34px] h-[34px] p-0 absolute top-4 right-4 z-3">
                     @if(!isFavorited($item->id))
 					<svg width="16" height="15" viewBox="0 0 16 15" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -76,8 +110,16 @@
 					</svg>
                     @endif
 				</a>
-				<div class="absolute top-0 left-0 w-full h-full transition-all z-2">
-					@if($item->type == 'text' or $item->type == 'code')
+				@endif
+				<div class="absolute top-0 left-0 w-full h-full transition-all z-2 @if($upgrade) bg-white opacity-75 dark:!bg-black @endif">
+					@if($upgrade)
+						<div class="absolute right-2 top-2 z-10 bg-[#E2FFFC] text-black font-medium py-0.5 px-2 rounded-md">
+							{{__('Upgrade')}}
+						</div>
+						<a href="{{ LaravelLocalization::localizeUrl(route('dashboard.user.payment.subscription')) }}" class="inline-block w-full h-full absolute top-0 left-0 overflow-hidden -indent-[99999px]">
+							{{__('Upgrade')}}
+						</a>
+					@elseif($item->type == 'text' or $item->type == 'code')
                         @if(Auth::user()->remaining_words > 0 or Auth::user()->remaining_words == -1)
 						<a href="{{ LaravelLocalization::localizeUrl( route('dashboard.user.openai.generator.workbook', $item->slug)) }}" class="inline-block w-full h-full absolute top-0 left-0 overflow-hidden -indent-[99999px]">
 							{{__('Create Workbook')}}

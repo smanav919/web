@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('settings', function (Blueprint $table) {
-            $table->string('free_plan')->default('0,0');
+            $table->string('free_plan', 100)->default('0,0');
         });
     }
 

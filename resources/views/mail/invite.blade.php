@@ -368,31 +368,28 @@
 
             <div class="content-indent">
 
-                <div style="padding: 0 19px">
-                    <h1>You are Invited!</h1>
-                    <p>Hey,</p>
-                    <p>We’re excited to invite you to join {{$settings->site_name}}. It is designed to help businesses and individuals leverage the power of artificial intelligence to generate any kind of content easily.</p>
-                    <p>You can use {{$settings->site_name}} for: </p>
-                    <p>
-                    <ul>
-                        <li>Copywriting</li>
-                        <li>Images</li>
-                        <li>ChatBot</li>
-                        <li>Speech to Text</li>
-                        <li>Coding</li>
-                    </ul>
-                    </p>
-                    <p>Once you have created your account, you can start exploring the platform and see for yourself how it can benefit you.</p>
-                    <p>Thank you for considering this invitation. I look forward to seeing you on MagicAI.</p>
-                </div>
+                @php
+                    $template->content = str_replace( 
+                        [
+                            '{site_name}',
+                            '{site_url}',
+                            '{reset_url}',
+                            '{affiliate_url}',
+                            '{user_name}',
+                            '{user_activation_url}',
+                        ], [
+                            $settings->site_name,
+                            $settings->site_url,
+                            $settings->site_url.'/forgot-password/retrieve/'.$user->password_reset_code,
+                            $settings->site_url.'/register?aff='.$user->affiliate_code,
+                            $user->name,
+                            $settings->site_url.'/confirm/email/'.$user->email_confirmation_code
+                        ],
+                        $template->content
+                    );
+                @endphp
 
-                <br>
-
-                <a href="{{$settings->site_url}}/register?aff={{$user->affiliate_code}}" class="btn btn-lg btn-block btn-round">
-                    Discover {{$settings->site_name}}
-                </a>
-
-                <p class="need-help-p">Need help? <a href="{{$settings->site_url}}">Contact us.</a></p>
+                {!!$template->content!!}
 
             </div>
 

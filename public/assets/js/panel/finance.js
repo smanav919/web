@@ -2,7 +2,7 @@ function prepaidSave( plan_id ) {
 	"use strict";
 
 	document.getElementById( "item_edit_button" ).disabled = true;
-	document.getElementById( "item_edit_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "item_edit_button" ).innerHTML = magicai_localize.please_wait;
 
 	var formData = new FormData();
 	if ( plan_id != 'undefined' ) {
@@ -51,7 +51,7 @@ function subscriptionSave( plan_id ) {
 	"use_strict";
 
 	document.getElementById( "item_edit_button" ).disabled = true;
-	document.getElementById( "item_edit_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "item_edit_button" ).innerHTML = magicai_localize.please_wait;
 
 	var formData = new FormData();
 	if ( plan_id != 'undefined' ) {
@@ -69,7 +69,7 @@ function subscriptionSave( plan_id ) {
 	formData.append( 'total_words', $( "#total_words" ).val() );
 	formData.append( 'total_images', $( "#total_images" ).val() );
 	formData.append( 'ai_name', $( "#ai_name" ).val() );
-	formData.append( 'max_tokens', $( "#max_tokens" ).val() );
+	// formData.append( 'max_tokens', $( "#max_tokens" ).val() );
 	formData.append( 'can_create_ai_images', $( "#can_create_ai_images" ).val() );
 	formData.append( 'plan_type', $( "#plan_type" ).val() );
 	formData.append( 'features', $( "#features" ).val() );

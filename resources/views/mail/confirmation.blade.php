@@ -368,32 +368,28 @@
 
             <div class="content-indent">
 
-                <div style="padding: 0 19px">
-                    <h1>Hello, {{$user->name}}!</h1>
-                    <h2>Welcome to {{$settings->site_name}}!</h2>
+                @php
+                    $template->content = str_replace( 
+                        [
+                            '{site_name}',
+                            '{site_url}',
+                            '{reset_url}',
+                            '{affiliate_url}',
+                            '{user_name}',
+                            '{user_activation_url}',
+                        ], [
+                            $settings->site_name,
+                            $settings->site_url,
+                            $settings->site_url.'/forgot-password/retrieve/'.$user->password_reset_code,
+                            $settings->site_url.'/register?aff='.$user->affiliate_code,
+                            $user->name,
+                            $settings->site_url.'/confirm/email/'.$user->email_confirmation_code
+                        ],
+                        $template->content
+                    );
+                @endphp
 
-                    <p>We are pleased to inform you that your {{$settings->site_name}} account has been successfully created. </p>
-                    <p>Our platform offers a wide range of features and services to help you achieve your goals.</p>
-                    <p>You can use {{$settings->site_name}} for: </p>
-                    <p>
-                    <ul>
-                        <li>Copywriting</li>
-                        <li>Images</li>
-                        <li>ChatBot</li>
-                        <li>Speech to Text</li>
-                        <li>Coding</li>
-                    </ul>
-                    </p>
-                    <p>Thank you for choosing MagicAI as your partner in achieving your goals. We look forward to working with you and helping you succeed.</p>
-                </div>
-
-                <br>
-
-                <a href="{{$settings->site_url}}/confirm/email/{{$user->email_confirmation_code}}" class="btn btn-lg btn-block btn-round">
-                    Confirm My Account
-                </a>
-
-                <p class="need-help-p">Need help? <a href="{{$settings->site_url}}">Contact us.</a></p>
+                {!!$template->content!!}
 
             </div>
 

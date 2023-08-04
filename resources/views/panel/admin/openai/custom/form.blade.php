@@ -70,7 +70,7 @@
 						</div>
 
 
-						<div class="form-control border-none p-0 mb-20 [&_.select2-selection--multiple]:!border-[--tblr-border-color] [&_.select2-selection--multiple]:!p-[1em_1.23em] [&_.select2-selection--multiple]:!rounded-[--tblr-border-radius]">
+						<div class="form-control border-none p-0 mb-[20px] [&_.select2-selection--multiple]:!border-[--tblr-border-color] [&_.select2-selection--multiple]:!p-[1em_1.23em] [&_.select2-selection--multiple]:!rounded-[--tblr-border-radius]">
 							<label class="form-label">
 								{{__('Template Category')}}
 								<x-info-tooltip text="{{__('Categories of the template. Useful for filtering in the templates list.')}}" />
@@ -86,6 +86,17 @@
 								<svg class="inline !me-1" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path> <path d="M12 9h.01"></path> <path d="M11 12h1v4h1"></path> </svg>
 								{{__('You can add more filters, just add a filter and hit enter.')}}
 							</div>
+						</div>
+
+						<div class="mb-20">
+							<label class="form-label">
+								{{__('Package Type')}}
+								<x-info-tooltip text="{{__('Choose package type for which plans accessible.')}}" />
+							</label>
+							<select class="form-control" name="premium" id="premium">
+                                <option value="0" {{$template!=null && $template->premium == 0 ? 'selected' : ''}}>{{__('Regular')}}</option>
+                                <option value="1" {{$template!=null && $template->premium == 1 ? 'selected' : ''}}>{{__('Premium')}}</option>
+							</select>
 						</div>
 
 						<div class="flex items-center !p-4 !py-3 !gap-3 rounded-xl text-[17px] bg-[rgba(157,107,221,0.1)] font-semibold mb-10">
@@ -116,7 +127,7 @@
 												{{__('Input Name')}}
 												<x-info-tooltip text="{{__('Unique input name that you can use in your prompts later.')}}" />
 											</label>
-											<input type="text" class="form-control input_name" placeholder="{{__('Enter Name Here')}}" oninput="this.value=this.value.replace(/[^A-Za-z\s]/g,'');" value="{{$question->question}}">
+											<input type="text" class="form-control input_name" placeholder="{{__('Enter Name Here')}}" value="{{$question->question}}">
 										</div>
 										<div class="mb-[20px]">
 											<label class="form-label">
@@ -149,7 +160,7 @@
 											{{__('Input Name')}}
 											<x-info-tooltip text="{{__('Unique input name that you can use in your prompts later.')}}" />
 										</label>
-										<input type="text" class="form-control input_name" oninput="this.value=this.value.replace(/[^A-Za-z\s]/g,'');" placeholder="{{__('Enter Name Here')}}">
+										<input type="text" class="form-control input_name" placeholder="{{__('Enter Name Here')}}">
 									</div>
 									<div class="mb-[20px]">
 										<label class="form-label">
@@ -217,7 +228,7 @@
 					{{__('Input Name')}}
 					<x-info-tooltip text="{{__('Unique input name that you can use in your prompts later.')}}" />
 				</label>
-				<input type="text" class="form-control input_name" oninput="this.value=this.value.replace(/[^A-Za-z\s]/g,'');" placeholder="{{__('Enter Name Here')}}">
+				<input type="text" class="form-control input_name" placeholder="{{__('Enter Name Here')}}">
 			</div>
 			<div class="mb-[20px]">
 				<label class="form-label">

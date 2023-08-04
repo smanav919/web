@@ -357,13 +357,14 @@ function makeDocumentReadyAgain() {
 				chatsContainer[ 0 ].addEventListener( 'scroll', onWindowScroll );
 
 				eventSource.onmessage = function ( e ) {
+					aiBubbleWrapper.classList.remove( 'loading' );
+
 					if ( e.data === '[DONE]' ) {
 						//This is the area when the chat ends.
 						eventSource.close();
 						submitBtn.disabled = false;
 						submitBtn.classList.remove( 'submitting' );
 						document.getElementById( "chat_form" ).reset();
-						aiBubbleWrapper.classList.remove( 'loading' );
 
 						window.removeEventListener( 'beforeunload', onBeforePageUnload );
 					}
@@ -371,7 +372,6 @@ function makeDocumentReadyAgain() {
 					if ( txt !== undefined && e.data != '[DONE]' ) {
 						//This is the area which the text will append to the div
 						responseText += txt.split( "/**" )[ 0 ];
-						aiBubbleWrapper.classList.remove( 'loading' );
 						aiBubbleWrapper.querySelector( '.chat-content' ).innerHTML = responseText;
 
 						scrollLocked && chatsContainer[ 0 ].scrollTo( 0, chatsContainer[ 0 ].scrollHeight );
@@ -383,6 +383,7 @@ function makeDocumentReadyAgain() {
 					eventSource.close();
 					submitBtn.disabled = false;
 					submitBtn.classList.remove( 'submitting' );
+					aiBubbleWrapper.classList.remove( 'loading' );
 					document.getElementById( "chat_form" ).reset();
 
 					window.removeEventListener( 'beforeunload', onBeforePageUnload );

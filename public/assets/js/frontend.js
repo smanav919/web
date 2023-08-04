@@ -384,6 +384,32 @@
 
 	bannerGradient();
 
+
+	// Copy to clipboard
+	document.addEventListener( 'click', ev => {
+
+		const button = ev.target.closest( '.lqd-clipboard-copy' );
+
+		if ( !button ) return;
+
+		const settings = JSON.parse( button.getAttribute( 'data-copy-options' ) || {} );
+		let getContentFrom;
+
+		if ( settings.contentIn ) {
+			if ( settings.contentIn.startsWith( '<' ) && settings.content ) {
+				const el = button.parentElement.closest( settings.contentIn.replace( '<', '' ) );
+				getContentFrom = el.querySelector( settings.content );
+			}
+		} else {
+			getContentFrom = settings.content ? document.querySelector( settings.content ) : button.parentElement
+		}
+
+		if ( getContentFrom ) {
+			navigator.clipboard.writeText( getContentFrom.innerText );
+			toastr.success( magicai_localize?.content_copied_to_clipboard || 'Content copied to clipboard' );
+		}
+	} )
+
 	window.addEventListener( 'scroll', onWindowScroll );
 
 	window.addEventListener( 'resize', onWindowResize );

@@ -110,8 +110,8 @@
 @endsection
 @section('script')
 
-    @if($gateway->mode == 'sandbox')
-    <script src="https://www.paypal.com/sdk/js?client-id={{ $gateway->sandbox_client_id }}&vault=true&intent=subscription"></script>
+    @if($gateway->mode == 'live')
+    <script src="https://www.paypal.com/sdk/js?client-id={{ $gateway->live_client_id }}&vault=true&intent=subscription"></script>
 
     <script>
 
@@ -159,7 +159,7 @@
     </script>
 
     @else
-    <script src="https://www.paypal.com/sdk/js?client-id={{ $gateway->live_client_id }}&vault=true&intent=subscription"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id={{ $gateway->sandbox_client_id }}&vault=true&intent=subscription"></script>
    
     <script>
 

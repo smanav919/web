@@ -368,21 +368,28 @@
 
             <div class="content-indent">
 
-                <div style="padding: 0 19px">
-                    <h1>Password Reset</h1>
-                    <p>Hey,</p>
-                    <p>We noticed that you recently requested to reset your password. To ensure the security of your account, we have reset your password for you.</p>
-                    <p>Sincerely,</p>
-                    <p>{{$settings->site_name}}</p>
-                </div>
+                @php
+                    $template->content = str_replace( 
+                        [
+                            '{site_name}',
+                            '{site_url}',
+                            '{reset_url}',
+                            '{affiliate_url}',
+                            '{user_name}',
+                            '{user_activation_url}',
+                        ], [
+                            $settings->site_name,
+                            $settings->site_url,
+                            $settings->site_url.'/forgot-password/retrieve/'.$user->password_reset_code,
+                            $settings->site_url.'/register?aff='.$user->affiliate_code,
+                            $user->name,
+                            $settings->site_url.'/confirm/email/'.$user->email_confirmation_code
+                        ],
+                        $template->content
+                    );
+                @endphp
 
-                <br>
-
-                <a href="{{$settings->site_url}}/forgot-password/retrieve/{{$user->password_reset_code}}" class="btn btn-lg btn-block btn-round">
-                    Reset Password
-                </a>
-
-                <p class="need-help-p">Need help? <a href="{{$settings->site_url}}">Contact us.</a></p>
+                {!!$template->content!!}
 
             </div>
 

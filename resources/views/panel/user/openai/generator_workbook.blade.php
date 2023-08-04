@@ -7,7 +7,11 @@
             <div class="row g-2 items-center">
                 <div class="col">
                     <div class="page-pretitle">
-                        {{__('Generate high quality code in seconds.')}}
+                        @if( $openai->type == 'code' )
+                            {{__('Generate high quality code in seconds.')}}
+                        @elseif(isset($openai->description))
+                            {{__($openai->description)}}
+                        @endif
                     </div>
                     <h2 class="page-title mb-2">
                         {{__($openai->title)}}
@@ -131,7 +135,7 @@
                         @endif
 
 						<div class="col-xs-12 mt-[10px]">
-							<button form="openai_generator_form" id="openai_generator_button" class="btn btn-primary w-100 py-[0.75em] flex items-center group">
+							<button id="openai_generator_button" class="btn btn-primary w-100 py-[0.75em] flex items-center group" type="submit">
 								<span class="hidden group-[.lqd-form-submitting]:inline-flex">{{__('Please wait...')}}</span>
 								<span class="group-[.lqd-form-submitting]:hidden">{{__('Generate')}}</span>
 							</button>
@@ -215,9 +219,6 @@
 							<div class="mb-[20px]">
 								<textarea class="form-control tinymce" id="default" rows="25"></textarea>
 							</div>
-							<div class="mb-[20px]">
-								<button class="btn btn-success w-100 py-[0.75em]" disabled>{{__('Save')}}</button>
-							</div>
                         </form>
                     </div>
                     @endif
@@ -245,15 +246,30 @@
 	<script src="/assets/libs/prism/prism.js"></script>
 	@endif
     <script>
+        const stream_type = '{!!$settings_two->openai_default_stream_server!!}';
+
         function sendOpenaiGeneratorForm(ev){
 			"use strict";
-            tinymce.remove(".tinymce");
+
+			tinyMCE?.activeEditor?.setContent('');
+
 			ev?.preventDefault();
 			ev?.stopPropagation();
 			const submitBtn = document.getElementById("openai_generator_button");
+			const editArea = document.querySelector('.tox-edit-area');
+			const typingTemplate = document.querySelector('#typing-template').content.cloneNode( true );
+			const typingEl = typingTemplate.firstElementChild;
             document.querySelector('#app-loading-indicator')?.classList?.remove('opacity-0');
             submitBtn.classList.add('lqd-form-submitting');
             submitBtn.disabled = true;
+
+			if ( editArea ) {
+				if ( !editArea.querySelector('.lqd-typing') ) {
+					editArea.appendChild(typingEl);
+				} else {
+					editArea.querySelector('.lqd-typing')?.classList?.remove('lqd-is-hidden');
+				}
+			}
 
             var formData = new FormData();
             formData.append('post_type', '{{$openai->slug}}');
@@ -281,34 +297,36 @@
                         // because data changing in the dom can't cache codeOutput
                         // const codeOutput = $("#code-output");
                         toastr.success('Generated Successfully!');
-                        if ( $("#code-output").length ) {
-                            $("#workbook_textarea").html(data.html);
-                            window.codeRaw = $("#code-output").text();
-                            $("#code-output").addClass(`language-${$('#code_lang').val() || 'javascript'}`);
-                            Prism.highlightElement($("#code-output")[0]);
-                        } else {
-                            tinymce.activeEditor.destroy();
-                            $("#workbook_textarea").html(data.html);
-                            getResult();
-                        }
-                    submitBtn.classList.remove('lqd-form-submitting');
-                    document.querySelector('#app-loading-indicator')?.classList?.add('opacity-0');
-                    document.querySelector('#workbook_regenerate')?.classList?.remove('hidden');
-                    submitBtn.disabled = false;
-                    @else
-                        @if($setting->hosting_type == 'high')
+                        // if ( $("#code-output").length ) {
                         $("#workbook_textarea").html(data.html);
-                        if ( localStorage.getItem( "tablerTheme" ) === 'dark' ) {
-                            tinymceOptions.skin = 'oxide-dark';
-                            tinymceOptions.content_css = 'dark';
-                        }
-                        tinyMCE.init( tinymceOptions );
+                        window.codeRaw = $("#code-output").text();
+                        $("#code-output").addClass(`language-${$('#code_lang').val() || 'javascript'}`);
+                        Prism.highlightElement($("#code-output")[0]);
+                        // } else {
+                        //     tinymce.activeEditor.destroy();
+                        //     $("#workbook_textarea").html(data.html);
+                        //     getResult();
+                        // }
+                        submitBtn.classList.remove('lqd-form-submitting');
+                        document.querySelector('#app-loading-indicator')?.classList?.add('opacity-0');
+                        document.querySelector('#workbook_regenerate')?.classList?.remove('hidden');
+                        submitBtn.disabled = false;
+                    @else
+						const typingEl = document.querySelector( '.tox-edit-area > .lqd-typing' );
+                        @if($setting->hosting_type == 'high')
+                        // $("#workbook_textarea").html(data.html);
+                        // if ( localStorage.getItem( "tablerTheme" ) === 'dark' ) {
+                        //     tinymceOptions.skin = 'oxide-dark';
+                        //     tinymceOptions.content_css = 'dark';
+                        // }
+                        // tinyMCE.init( tinymceOptions );
 
                         let responseText = '';
                         const message_id = data.message_id;
                         const eventSource = new EventSource( "/dashboard/user/openai/generate?message_id=" + message_id+"&maximum_length=" + data.maximum_length + "&number_of_results=" + data.number_of_results + "&creativity=" + data.creativity);
                         eventSource.onmessage = function ( e ) {
                             let txt = e.data;
+							typingEl.classList.add('lqd-is-hidden');
                             if ( txt === '[DONE]' ) {
                                 //This is the area when the chat ends.
                                 eventSource.close();
@@ -323,13 +341,14 @@
                             }
                         };
                         @else
-                            $("#workbook_textarea").html(data.html);
+                            // $("#workbook_textarea").html(data.html);
 
                             const message_no = data.message_id;
                             const creativity = data.creativity;
                             const maximum_length = parseInt(data.maximum_length);
                             const number_of_results = data.number_of_results;
                             const prompt = data.inputPrompt;
+
                             return generate(message_no, creativity, maximum_length, number_of_results, prompt);
 
                         @endif

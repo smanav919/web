@@ -293,6 +293,78 @@
 
                     </div>
 
+                    <div class="row">
+                        <h3 class="mb-[25px] text-[20px]">{{__('Blog Section')}}</h3>
+
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">{{__('Blog Active')}}</label>
+                                <select class="form-select" name="blog_active" id="blog_active">
+                                    <option value="1" {{$fSectSettings->blog_active == 1 ? 'selected' : ''}}>{{__('Active')}}</option>
+                                    <option value="0" {{$fSectSettings->blog_active == 0 ? 'selected' : ''}}>{{__('Passive')}}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">{{__('Blog Title')}}</label>
+                                <input type="text" class="form-control" id="blog_title" name="blog_title" value="{{$fSectSettings->blog_title}}">
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">{{__('Blog Subtitle')}}</label>
+                                <input type="text" class="form-control" id="blog_subtitle" name="blog_subtitle" value="{{$fSectSettings->blog_subtitle}}">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">{{__('Blog Posts Per Page')}}</label>
+                                <input type="number" class="form-control" id="blog_posts_per_page" name="blog_posts_per_page" min="1" max="6" value="{{$fSectSettings->blog_posts_per_page}}">
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">{{__('Blog Button Text')}}</label>
+                                <input type="text" class="form-control" id="blog_button_text" name="blog_button_text" value="{{$fSectSettings->blog_button_text}}">
+                            </div>
+                        </div>
+
+                        <h5 class="mb-[25px] text-[16px]">{{__('Blog Archive Options')}}</h5>
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">{{__('Blog Title')}}</label>
+                                <input type="text" class="form-control" id="blog_a_title" name="blog_a_title" value="{{$fSectSettings->blog_a_title}}">
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">{{__('Blog Subtitle')}}</label>
+                                <input type="text" class="form-control" id="blog_a_subtitle" name="blog_a_subtitle" value="{{$fSectSettings->blog_a_title}}">
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">{{__('Blog Description')}}</label>
+                                <input type="text" class="form-control" id="blog_a_description" name="blog_a_description" value="{{$fSectSettings->blog_a_description}}">
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">{{__('Blog Posts Per Page')}}</label>
+                                <input type="number" class="form-control" id="blog_a_posts_per_page" name="blog_a_posts_per_page" min="1" max="12" value="{{$fSectSettings->blog_a_posts_per_page}}">
+                            </div>
+                        </div>
+
+                    </div>
+
 
                     <button form="settings_form" id="settings_button" class="btn btn-primary w-100">
                         {{__('Save')}}

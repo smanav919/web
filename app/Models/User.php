@@ -12,7 +12,7 @@ use Laravel\Cashier\Subscription;
 use Laravel\Cashier\Billable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Subscriptions as SubscriptionsModel;
-
+use App\Models\YokassaSubscriptions as YokassaSubscriptionsModel;
 
 class User extends Authenticatable
 {
@@ -56,89 +56,119 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function fullName(){
-        return $this->name.' '.$this->surname;
+    public function fullName()
+    {
+        return $this->name . ' ' . $this->surname;
     }
 
-    public function openai(){
+    public function openai()
+    {
         return $this->hasMany(UserOpenai::class);
     }
 
-    public function orders(){
+    public function orders()
+    {
         return $this->hasMany(UserOrder::class)->orderBy('created_at', 'desc');
     }
 
-    public function plan(){
+    public function plan()
+    {
         return $this->hasMany(UserOrder::class)->where('type', 'subscription')->orderBy('created_at', 'desc')->first();
     }
 
-    public function activePlan(){
+    public function activePlan()
+    {
 
         // $activeSub = $this->subscriptions()->where('stripe_status', 'active')->orWhere('stripe_status', 'trialing')->first();
         // $userId=Auth::user()->id;
-        $userId=$this->id;
+        $userId = $this->id;
         // Get current active subscription
         $activeSub = SubscriptionsModel::where([['stripe_status', '=', 'active'], ['user_id', '=', $userId]])->orWhere([['stripe_status', '=', 'trialing'], ['user_id', '=', $userId]])->first();
-        if ($activeSub != null){
+        if ($activeSub != null) {
             $plan = PaymentPlans::where('id', $activeSub->plan_id)->first();
-            if ($plan == null){
+            if ($plan == null) {
                 return null;
             }
             $difference = $activeSub->updated_at->diffInDays(Carbon::now());
-            if ($plan->frequency == 'monthly'){
-                if ($difference < 31){
+            if ($plan->frequency == 'monthly') {
+                if ($difference < 31) {
                     return $plan;
                 }
-            }elseif ($plan->frequency == 'yearly'){
-                if ($difference < 365){
+            } elseif ($plan->frequency == 'yearly') {
+                if ($difference < 365) {
                     return $plan;
                 }
             }
-        }else{
-            return null;
-        }
+        } else {
+            $activeSub = YokassaSubscriptionsModel::where([['subscription_status', '=', 'active'],['user_id','=', $userId]])->first();
 
+            if ($activeSub != null) {
+                $plan = PaymentPlans::where('id', $activeSub->plan_id)->first();
+                if ($plan == null) {
+                    return null;
+                }
+                $difference = $activeSub->updated_at->diffInDays(Carbon::now());
+                if ($plan->frequency == 'monthly') {
+                    if ($difference < 31) {
+                        return $plan;
+                    }
+                } elseif ($plan->frequency == 'yearly') {
+                    if ($difference < 365) {
+                        return $plan;
+                    }
+                }
+            } else {
+                return null;
+            }
+        }
     }
 
 
     //Support Requests
-    public function supportRequests(){
+    public function supportRequests()
+    {
         return $this->hasMany(UserSupport::class);
     }
 
     //Favorites
-    public function favoriteOpenai(){
+    public function favoriteOpenai()
+    {
         return $this->belongsToMany(OpenAIGenerator::class, 'user_favorites', 'user_id', 'openai_id');
     }
 
     //Affiliate
-    public function affiliates(){
+    public function affiliates()
+    {
         return $this->hasMany(User::class, 'affiliate_id', 'id');
     }
 
-    public function affiliateOf(){
+    public function affiliateOf()
+    {
         return $this->belongsTo(User::class, 'affiliate_id', 'id');
     }
 
-    public function withdrawals(){
+    public function withdrawals()
+    {
         return $this->hasMany(UserAffiliate::class);
     }
 
     //Chat
-    public function openaiChat(){
+    public function openaiChat()
+    {
         return $this->hasMany(UserOpenaiChat::class);
     }
 
     //Avatar
-    public function getAvatar(){
-        if ($this->avatar == null){
-            return '<span class="avatar">'.Str::upper(substr($this->name, 0, 1)).Str::upper(substr($this->surname, 0, 1)).'</span>';
-        }else{
+    public function getAvatar()
+    {
+        if ($this->avatar == null) {
+            return '<span class="avatar">' . Str::upper(substr($this->name, 0, 1)) . Str::upper(substr($this->surname, 0, 1)) . '</span>';
+        } else {
             $avatar = $this->avatar;
             if (strpos($avatar, 'http') === false || strpos($avatar, 'https') === false) {
-                $avatar = '/'. $avatar;
+                $avatar = '/' . $avatar;
             }
-            return  ' <span class="avatar" style="background-image: url('.$avatar.')"></span>';
+            return  ' <span class="avatar" style="background-image: url(' . $avatar . ')"></span>';
         }
     }
 }

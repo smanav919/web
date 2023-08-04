@@ -297,7 +297,7 @@
 							<input class="form-check-input" type="checkbox" id="feature_ai_speech_to_text" {{ $setting->feature_ai_speech_to_text ? 'checked' : '' }}>
 							<span class="form-check-label">{{ __('AI Speech to Text') }}</span>
 						</label>
-						<label class="form-check form-switch" style="display: none;">
+						<label class="form-check form-switch">
 							<input class="form-check-input" type="checkbox" id="feature_ai_voiceover" {{ $setting->feature_ai_voiceover ? 'checked' : '' }}>
 							<span class="form-check-label">{{ __('AI Voiceover') }}</span>
 						</label>

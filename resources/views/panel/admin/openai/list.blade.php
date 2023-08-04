@@ -48,7 +48,16 @@
 								</td>
 								<td class="sort-name">{{__($entry->title)}}</td>
 								<td class="sort-description">{{__($entry->description)}}</td>
-								<td class="sort-package">{{$entry->premium == 1 ? __('Premium') : __('Regular')}}</td>
+								<td class="sort-package">
+                                    @if(env('APP_STATUS') == 'Demo')
+                                    <select class="form-control min-w-[90px]" onchange="return toastr.info('This feature is disabled in Demo version.');" name="premium" id="premium">
+                                    @else
+                                    <select class="form-control min-w-[90px]" onchange="return updatePackageStatus(this.value, {{$entry->id}});" name="premium" id="premium">
+                                    @endif
+                                        <option value="0" {{$entry->premium == 0 ? 'selected' : ''}}>{{__('Regular')}}</option>
+                                        <option value="1" {{$entry->premium == 1 ? 'selected' : ''}}>{{__('Premium')}}</option>
+                                    </select>
+                                </td>
 
 								<td class="sort-date" data-date="{{strtotime($entry->updated_at)}}">
 									<p class="m-0">{{date("j.n.Y", strtotime($entry->updated_at))}}</p>

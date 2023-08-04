@@ -17,7 +17,9 @@
 <option value="id-ID" {{$setting->openai_default_language == 'id-ID' ? 'selected' : null}}>{{__('Indonesian (Indonesia)')}}</option>
 <option value="it-IT" {{$setting->openai_default_language == 'it-IT' ? 'selected' : null}}>{{__('Italian (Italy)')}}</option>
 <option value="ja-JP" {{$setting->openai_default_language == 'ja-JP' ? 'selected' : null}}>{{__('Japanese (Japan)')}}</option>
+<option value="kk-KZ" {{$setting->openai_default_language == 'kk-KZ' ? 'selected' : null}}>{{__('Kazakh (Kazakhistan)')}}</option>
 <option value="ko-KR" {{$setting->openai_default_language == 'ko-KR' ? 'selected' : null}}>{{__('Korean (South Korea)')}}</option>
+<option value="lt-LT" {{$setting->openai_default_language == 'lt-LT' ? 'selected' : null}}>{{__('Lithuanian (Lithuania)')}}</option>
 <option value="ms-MY" {{$setting->openai_default_language == 'ms-MY' ? 'selected' : null}}>{{__('Malay (Malaysia)')}}</option>
 <option value="nb-NO" {{$setting->openai_default_language == 'nb-NO' ? 'selected' : null}}>{{__('Norwegian (Norway)')}}</option>
 <option value="pl-PL" {{$setting->openai_default_language == 'pl-PL' ? 'selected' : null}}>{{__('Polish (Poland)')}}</option>

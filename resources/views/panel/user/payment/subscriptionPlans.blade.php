@@ -37,7 +37,7 @@
 							<div class="flex items-start mb-2 text-[50px] leading-none text-heading font-bold">
 								{{$plan->price}}
 								<div class="inline-flex flex-col items-start gap-2 mt-2 ms-2 text-[0.3em]">
-									{{currency()->code}} / {{$plan->frequency}}
+									{{$plan->currency}} / {{__($plan->frequency)}}
 									@if($plan->is_featured == 1)
 										<div class="inline-flex rounded-full py-[0.25rem] px-[0.75rem] bg-gradient-to-r from-[#ece7f7] via-[#e7c5e6] to-[#e7ebf9] text-[11px] text-black">
 											{{__('Popular plan')}}
@@ -119,18 +119,18 @@
 											</div>
 											<div class="modal-body vstack gap-3">
 											@foreach($activeGateways as $gateway)
-											@php($data=$gatewayControls->gatewayData($gateway->code))
-											<a href="{{ LaravelLocalization::localizeUrl( route('dashboard.user.payment.startSubscriptionProcess',['planId' => $planid, 'gatewayCode' => $data['code'] ]) ) }}" 
-											class="btn rounded-3xl px-3 py-0 -mx-px -mb-px w-full h-[36px] flex items-center border border-[--tblr-border-color] text-[15px] font-semibold shadow-none hover:bg-[--tblr-primary] hover:text-white">
-												<div class="flex justify-between w-100 align-middle items-center h-[36px] m-0 p-0"> 
-													@if($data['whiteLogo'] == 1)
-													<img src="{{ $data['img'] }}" style="max-height:24px;" alt="{{ $data['title'] }}"  class="rounded-3xl bg-[--tblr-primary] "/>
-													@else
-													<img src="{{ $data['img'] }}" style="max-height:24px;" alt="{{ $data['title'] }}"/>
-													@endif
-													<span class="">{{ $data['title'] }}</span>
-												</div>
-											</a>
+												@php($data=$gatewayControls->gatewayData($gateway->code))
+													<a href="{{ LaravelLocalization::localizeUrl( route('dashboard.user.payment.startSubscriptionProcess',['planId' => $planid, 'gatewayCode' => $data['code'] ]) ) }}" 
+													class="btn rounded-3xl px-3 py-0 -mx-px -mb-px w-full h-[36px] flex items-center border border-[--tblr-border-color] text-[15px] font-semibold shadow-none hover:bg-[--tblr-primary] hover:text-white">
+														<div class="flex justify-between w-100 align-middle items-center h-[36px] m-0 p-0"> 
+															@if($data['whiteLogo'] == 1)
+															<img src="{{ $data['img'] }}" style="max-height:24px;" alt="{{ $data['title'] }}"  class="rounded-3xl bg-[--tblr-primary] "/>
+															@else
+															<img src="{{ $data['img'] }}" style="max-height:24px;" alt="{{ $data['title'] }}"/>
+															@endif
+															<span class="">{{ $data['title'] }}</span>
+														</div>
+													</a>
 											@endforeach
 											</div>
 										</div>
@@ -163,7 +163,7 @@
 								<div class="flex items-start mb-2 text-[50px] leading-none text-heading font-bold">
 									{{$plan->price}}
 									<div class="inline-flex flex-col items-start gap-2 mt-2 ms-2 text-[0.3em]">
-										{{currency()->code}} / {{__('One time')}}
+										{{$plan->currency}} / {{__('One time')}}
 										@if($plan->is_featured == 1)
 											<div class="inline-flex rounded-full py-[0.25rem] px-[0.75rem] bg-gradient-to-r from-[#ece7f7] via-[#e7c5e6] to-[#e7ebf9] text-[11px] text-black">
 												{{__('Popular pack')}}

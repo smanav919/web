@@ -7,6 +7,7 @@ module.exports = {
 		'./resources/views/components/*.blade.php',
 		'./resources/views/index.blade.php',
 		'./resources/views/vendor/**/*.blade.php',
+		'./resources/views/blog/**/*.blade.php',
 	],
 
 	theme: {

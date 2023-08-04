@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Carbon\Carbon;
 use Laravel\Cashier\Cashier;
@@ -29,6 +30,10 @@ use Laravel\Cashier\Subscription;
 use Laravel\Cashier\Payment;
 use Stripe\PaymentIntent;
 use Stripe\Plan;
+use Stripe\Exception\AuthenticationException;
+use Stripe\Exception\InvalidArgumentException;
+use App\Events\StripeWebhookEvent;
+
 
 /**
  * Controls ALL Payment actions of Stripe
@@ -38,15 +43,16 @@ class StripeController extends Controller
     /**
      * Reads GatewayProducts table and returns price id of the given plan
      */
-    public static function getStripePriceId($planId){
+    public static function getStripePriceId($planId)
+    {
 
         //check if plan exists
         $plan = PaymentPlans::where('id', $planId)->first();
-        if($plan != null){
+        if ($plan != null) {
             $product = GatewayProducts::where(["plan_id" => $planId, "gateway_code" => "stripe"])->first();
-            if($product != null){
+            if ($product != null) {
                 return $product->price_id;
-            }else{
+            } else {
                 return null;
             }
         }
@@ -56,26 +62,29 @@ class StripeController extends Controller
     /**
      * Displays Payment Page of Stripe gateway.
      */
-    public static function subscribe($planId, $plan){
+    public static function subscribe($planId, $plan)
+    {
 
         $gateway = Gateways::where("code", "stripe")->first();
-        if($gateway == null) { abort(404); } 
+        if ($gateway == null) {
+            abort(404);
+        }
 
         $currency = Currency::where('id', $gateway->currency)->first()->code;
 
-        if($gateway->mode == 'sandbox'){
+        if ($gateway->mode == 'sandbox') {
             config(['cashier.key' => $gateway->sandbox_client_id]);
-            config(['cashier.secret' => $gateway->sandbox_client_secret]); 
-            config(['cashier.currency' => $currency]); 
-        }else{
+            config(['cashier.secret' => $gateway->sandbox_client_secret]);
+            config(['cashier.currency' => $currency]);
+        } else {
             config(['cashier.key' => $gateway->live_client_id]); //$settings->stripe_key
             config(['cashier.secret' => $gateway->live_client_secret]); //$settings->stripe_secret
             config(['cashier.currency' => $currency]); //currency()->code
         }
 
-        if($gateway->mode == 'sandbox'){
+        if ($gateway->mode == 'sandbox') {
             $key = $gateway->sandbox_client_secret;
-        }else{
+        } else {
             $key = $gateway->live_client_secret;
         }
 
@@ -87,12 +96,12 @@ class StripeController extends Controller
         foreach ($stripe->customers->all()->data as $data) {
             array_push($currentCustomerIdsArray, $data->id);
         }
-        
-        if(in_array($user->stripe_id, $currentCustomerIdsArray) == false){
+
+        if (in_array($user->stripe_id, $currentCustomerIdsArray) == false) {
 
             $userData = [
                 "email" => $user->email,
-                "name" => $user->name." ".$user->surname,
+                "name" => $user->name . " " . $user->surname,
                 "phone" => $user->phone,
                 "address" => [
                     "line1" => $user->address,
@@ -106,21 +115,21 @@ class StripeController extends Controller
             $user->save();
         }
 
-        
+
         $intent = null;
         try {
             $intent = auth()->user()->createSetupIntent();
             $exception = null;
-            if(self::getStripePriceId($planId) == null){
+            if (self::getStripePriceId($planId) == null) {
                 $exception = "Stripe product ID is not set! Please save Membership Plan again.";
             }
         } catch (\Exception $th) {
             // $exception = $th;
-            $exception = Str::before($th->getMessage(),':');
+            $exception = Str::before($th->getMessage(), ':');
         }
 
 
-        
+
         return view('panel.user.payment.subscription.payWithStripe', compact('plan', 'intent', 'gateway', 'exception'));
     }
 
@@ -130,22 +139,25 @@ class StripeController extends Controller
      * 
      * Subscribe payment page posts here.
      */
-    public function subscribePay(Request $request){
+    public function subscribePay(Request $request)
+    {
 
         $plan = PaymentPlans::find($request->plan);
         $user = Auth::user();
         $settings = Setting::first();
 
         $gateway = Gateways::where("code", "stripe")->first();
-        if($gateway == null) { abort(404); } 
+        if ($gateway == null) {
+            abort(404);
+        }
 
         $currency = Currency::where('id', $gateway->currency)->first()->code;
 
-        if($gateway->mode == 'sandbox'){
+        if ($gateway->mode == 'sandbox') {
             config(['cashier.key' => $gateway->sandbox_client_id]);
-            config(['cashier.secret' => $gateway->sandbox_client_secret]); 
-            config(['cashier.currency' => $currency]); 
-        }else{
+            config(['cashier.secret' => $gateway->sandbox_client_secret]);
+            config(['cashier.currency' => $currency]);
+        } else {
             config(['cashier.key' => $gateway->live_client_id]); //$settings->stripe_key
             config(['cashier.secret' => $gateway->live_client_secret]); //$settings->stripe_secret
             config(['cashier.currency' => $currency]); //currency()->code
@@ -161,16 +173,16 @@ class StripeController extends Controller
 
         self::cancelAllSubscriptions();
 
-        if($plan->trial_days != 0){
+        if ($plan->trial_days != 0) {
             $subscription = $request->user()->newSubscription($planId, $productId)
-            ->trialDays((int)$plan->trial_days)
-            ->create($request->token);
-        }else{
+                ->trialDays((int)$plan->trial_days)
+                ->create($request->token);
+        } else {
             $subscription = $request->user()->newSubscription($planId, $productId)
-            ->create($request->token);
+                ->create($request->token);
         }
 
-        
+
 
         $subscription->plan_id = $planId;
         $subscription->paid_with = 'stripe';
@@ -182,7 +194,7 @@ class StripeController extends Controller
         $payment->user_id = $user->id;
         $payment->payment_type = 'Credit, Debit Card';
         $payment->price = $plan->price;
-        $payment->affiliate_earnings = ($plan->price*$settings->affiliate_commission_percentage)/100;
+        $payment->affiliate_earnings = ($plan->price * $settings->affiliate_commission_percentage) / 100;
         $payment->status = 'Success';
         $payment->country = Auth::user()->country ?? 'Unknown';
         $payment->save();
@@ -191,25 +203,26 @@ class StripeController extends Controller
         $user->remaining_images += $plan->total_images;
         $user->save();
 
-        createActivity($user->id, 'Subscribed', $plan->name.' Plan', null);
+        createActivity($user->id, 'Subscribed', $plan->name . ' Plan', null);
 
         return redirect()->route('dashboard.index')->with(['message' => 'Thank you for your purchase. Enjoy your remaining words and images.', 'type' => 'success']);
-
     }
 
     /**
      * This function is stripe specific.
-     * 
      */
-    public function cancelAllSubscriptions(){
+    public function cancelAllSubscriptions()
+    {
         $gateway = Gateways::where("code", "stripe")->first();
-        if($gateway == null) { abort(404); } 
+        if ($gateway == null) {
+            abort(404);
+        }
 
         $currency = Currency::where('id', $gateway->currency)->first()->code;
 
-        if($gateway->mode == 'sandbox'){
+        if ($gateway->mode == 'sandbox') {
             $key = $gateway->sandbox_client_secret;
-        }else{
+        } else {
             $key = $gateway->live_client_secret;
         }
 
@@ -220,9 +233,9 @@ class StripeController extends Controller
         $user = Auth::user();
 
         $allSubscriptions = $stripe->subscriptions->all();
-        if($allSubscriptions != null){
-            foreach($allSubscriptions as $subs){
-                if($subs->name != 'undefined' and $subs->name != null){
+        if ($allSubscriptions != null) {
+            foreach ($allSubscriptions as $subs) {
+                if ($subs->name != 'undefined' and $subs->name != null) {
                     $user->subscription($subs->name)->cancelNow();
                 }
             }
@@ -232,21 +245,24 @@ class StripeController extends Controller
     /**
      * Cancels current subscription plan
      */
-    public static function subscribeCancel(){
+    public static function subscribeCancel()
+    {
 
         $user = Auth::user();
         $settings = Setting::first();
 
         $gateway = Gateways::where("code", "stripe")->first();
-        if($gateway == null) { abort(404); } 
+        if ($gateway == null) {
+            abort(404);
+        }
 
         $currency = Currency::where('id', $gateway->currency)->first()->code;
 
-        if($gateway->mode == 'sandbox'){
+        if ($gateway->mode == 'sandbox') {
             config(['cashier.key' => $gateway->sandbox_client_id]);
-            config(['cashier.secret' => $gateway->sandbox_client_secret]); 
-            config(['cashier.currency' => $currency]); 
-        }else{
+            config(['cashier.secret' => $gateway->sandbox_client_secret]);
+            config(['cashier.currency' => $currency]);
+        } else {
             config(['cashier.key' => $gateway->live_client_id]); //$settings->stripe_key
             config(['cashier.secret' => $gateway->live_client_secret]); //$settings->stripe_secret
             config(['cashier.currency' => $currency]); //currency()->code
@@ -254,7 +270,7 @@ class StripeController extends Controller
 
         $activeSub = $user->subscriptions()->where('stripe_status', 'active')->orWhere('stripe_status', 'trialing')->first();
 
-        if($activeSub != null){
+        if ($activeSub != null) {
             $plan = PaymentPlans::where('id', $activeSub->plan_id)->first();
 
             $recent_words = $user->remaining_words - $plan->total_words;
@@ -271,7 +287,7 @@ class StripeController extends Controller
 
             return back()->with(['message' => 'Your subscription is cancelled succesfully.', 'type' => 'success']);
         }
-        
+
         return back()->with(['message' => 'Could not find active subscription. Nothing changed!', 'type' => 'error']);
     }
 
@@ -279,18 +295,21 @@ class StripeController extends Controller
     /**
      * Displays Payment Page of Stripe gateway for prepaid plans.
      */
-    public static function prepaid($planId, $plan, $incomingException = null){
+    public static function prepaid($planId, $plan, $incomingException = null)
+    {
 
         $gateway = Gateways::where("code", "stripe")->first();
-        if($gateway == null) { abort(404); } 
+        if ($gateway == null) {
+            abort(404);
+        }
 
         $currency = Currency::where('id', $gateway->currency)->first()->code;
 
-        if($gateway->mode == 'sandbox'){
+        if ($gateway->mode == 'sandbox') {
             config(['cashier.key' => $gateway->sandbox_client_id]);
-            config(['cashier.secret' => $gateway->sandbox_client_secret]); 
-            config(['cashier.currency' => $currency]); 
-        }else{
+            config(['cashier.secret' => $gateway->sandbox_client_secret]);
+            config(['cashier.currency' => $currency]);
+        } else {
             config(['cashier.key' => $gateway->live_client_id]); //$settings->stripe_key
             config(['cashier.secret' => $gateway->live_client_secret]); //$settings->stripe_secret
             config(['cashier.currency' => $currency]); //currency()->code
@@ -302,13 +321,13 @@ class StripeController extends Controller
         try {
             $intent = auth()->user()->createSetupIntent();
             $exception = $incomingException;
-            if(self::getStripePriceId($planId) == null){
+            if (self::getStripePriceId($planId) == null) {
                 $exception = "Stripe product ID is not set! Please save Membership Plan again.";
             }
         } catch (\Exception $th) {
-            $exception = Str::before($th->getMessage(),':');
+            $exception = Str::before($th->getMessage(), ':');
         }
-        
+
         return view('panel.user.payment.prepaid.payWithStripe', compact('plan', 'intent', 'gateway', 'exception', 'activesubs'));
     }
 
@@ -318,22 +337,25 @@ class StripeController extends Controller
      * 
      * Prepaid payment page posts here.
      */
-    public function prepaidPay(Request $request){
+    public function prepaidPay(Request $request)
+    {
 
         $plan = PaymentPlans::find($request->plan);
         $user = Auth::user();
         $settings = Setting::first();
 
         $gateway = Gateways::where("code", "stripe")->first();
-        if($gateway == null) { abort(404); } 
+        if ($gateway == null) {
+            abort(404);
+        }
 
         $currency = Currency::where('id', $gateway->currency)->first()->code;
 
-        if($gateway->mode == 'sandbox'){
+        if ($gateway->mode == 'sandbox') {
             config(['cashier.key' => $gateway->sandbox_client_id]);
-            config(['cashier.secret' => $gateway->sandbox_client_secret]); 
-            config(['cashier.currency' => $currency]); 
-        }else{
+            config(['cashier.secret' => $gateway->sandbox_client_secret]);
+            config(['cashier.currency' => $currency]);
+        } else {
             config(['cashier.key' => $gateway->live_client_id]); //$settings->stripe_key
             config(['cashier.secret' => $gateway->live_client_secret]); //$settings->stripe_secret
             config(['cashier.currency' => $currency]); //currency()->code
@@ -357,7 +379,7 @@ class StripeController extends Controller
         $payment->user_id = $user->id;
         $payment->payment_type = 'Credit, Debit Card';
         $payment->price = $plan->price;
-        $payment->affiliate_earnings = ($plan->price*$settings->affiliate_commission_percentage)/100;
+        $payment->affiliate_earnings = ($plan->price * $settings->affiliate_commission_percentage) / 100;
         $payment->status = 'Success';
         $payment->country = $user->country ?? 'Unknown';
         $payment->save();
@@ -366,7 +388,7 @@ class StripeController extends Controller
         $user->remaining_images += $plan->total_images;
         $user->save();
 
-        createActivity($user->id, 'Purchased', $plan->name.' Token Pack', null);
+        createActivity($user->id, 'Purchased', $plan->name . ' Token Pack', null);
 
         return redirect()->route('dashboard.index')->with(['message' => 'Thank you for your purchase. Enjoy your remaining words and images.', 'type' => 'success']);
     }
@@ -380,154 +402,156 @@ class StripeController extends Controller
      * @param frequency Time interval of subscription, month / annual
      * @param type Type of product subscription/one-time
      */
-    public static function saveProduct($planId, $productName, $price, $frequency, $type){
+    public static function saveProduct($planId, $productName, $price, $frequency, $type)
+    {
 
-    try{
+        try {
 
-        $price = (int)(((double)$price)*100); // Must be in cents level for stripe
+            $price = (int)(((float)$price) * 100); // Must be in cents level for stripe
 
-        $gateway = Gateways::where("code", "stripe")->first();
-        if($gateway == null) { abort(404); } 
+            $gateway = Gateways::where("code", "stripe")->first();
+            if ($gateway == null) {
+                abort(404);
+            }
 
-        $currency = Currency::where('id', $gateway->currency)->first()->code;
+            $currency = Currency::where('id', $gateway->currency)->first()->code;
 
-        if($gateway->mode == 'sandbox'){
-            $key = $gateway->sandbox_client_secret;
-        }else{
-            $key = $gateway->live_client_secret;
+            if ($gateway->mode == 'sandbox') {
+                $key = $gateway->sandbox_client_secret;
+            } else {
+                $key = $gateway->live_client_secret;
+            }
+
+            $stripe = new \Stripe\StripeClient($key);
+
+            $product = null;
+            $oldProductId = null;
+
+            //check if product exists
+            $productData = GatewayProducts::where(["plan_id" => $planId, "gateway_code" => "stripe"])->first();
+            if ($productData != null) {
+
+                // Create product in every situation. maybe user updated stripe credentials.
+
+                if ($productData->product_id != null && $productName != null) {
+                    //Product has been created before
+                    $oldProductId = $productData->product_id;
+                } else {
+                    //Product has not been created before but record exists. Create new product and update record.
+                }
+
+                $newProduct = $stripe->products->create(['name' => $productName,]);
+                $productData->product_id = $newProduct->id;
+                $productData->plan_name = $productName;
+                $productData->save();
+
+                $product = $productData;
+            } else {
+
+                $newProduct = $stripe->products->create(['name' => $productName,]);
+
+                $product = new GatewayProducts();
+                $product->plan_id = $planId;
+                $product->plan_name = $productName;
+                $product->gateway_code = "stripe";
+                $product->gateway_title = "Stripe";
+                $product->product_id = $newProduct->id;
+                $product->save();
+            }
+
+
+            //check if price exists
+            if ($product->price_id != null) {
+                //Price exists
+                // Since stripe api does not allow to update recurring values, we deactivate all prices added to this product before and add a new price object.
+
+                // Deactivate all prices
+                foreach ($stripe->prices->all(['product' => $product->product_id]) as $oldPrice) {
+                    $stripe->prices->update($oldPrice->id, ['active' => false]);
+                }
+
+                // One-Time price
+                if ($type == "o") {
+                    $updatedPrice = $stripe->prices->create([
+                        'unit_amount' => $price,
+                        'currency' => $currency,
+                        'product' => $product->product_id,
+                    ]);
+                    $product->price_id = $updatedPrice->id;
+                    $product->save();
+                } else {
+                    // Subscription
+
+                    $oldPriceId = $product->price_id;
+
+                    $updatedPrice = $stripe->prices->create([
+                        'unit_amount' => $price,
+                        'currency' => $currency,
+                        'recurring' => ['interval' => $frequency == "m" ? 'month' : 'year'],
+                        'product' => $product->product_id,
+                    ]);
+                    $product->price_id = $updatedPrice->id;
+                    $product->save();
+
+                    $history = new OldGatewayProducts();
+                    $history->plan_id = $planId;
+                    $history->plan_name = $productName;
+                    $history->gateway_code = 'stripe';
+                    $history->product_id = $product->product_id;
+                    $history->old_product_id = $oldProductId;
+                    $history->old_price_id = $oldPriceId;
+                    $history->new_price_id = $updatedPrice->id;
+                    $history->status = 'check';
+                    $history->save();
+
+                    $tmp = self::updateUserData();
+                }
+            } else {
+                // One-Time price
+                if ($type == "o") {
+                    $updatedPrice = $stripe->prices->create([
+                        'unit_amount' => $price,
+                        'currency' => $currency,
+                        'product' => $product->product_id,
+                    ]);
+                    $product->price_id = $updatedPrice->id;
+                    $product->save();
+                } else {
+                    // Subscription
+                    $updatedPrice = $stripe->prices->create([
+                        'unit_amount' => $price,
+                        'currency' => $currency,
+                        'recurring' => ['interval' => $frequency == "m" ? 'month' : 'year'],
+                        'product' => $product->product_id,
+                    ]);
+                    $product->price_id = $updatedPrice->id;
+                    $product->save();
+                }
+            }
+        } catch (\Exception $ex) {
+            error_log("StripeController::saveProduct()\n" . $ex->getMessage());
+            return back()->with(['message' => $ex->getMessage(), 'type' => 'error']);
         }
-
-        $stripe = new \Stripe\StripeClient($key);
-
-        $product = null;
-        $oldProductId = null;
-
-        //check if product exists
-        $productData = GatewayProducts::where(["plan_id" => $planId, "gateway_code" => "stripe"])->first();
-        if($productData != null){
-
-            // Create product in every situation. maybe user updated stripe credentials.
-
-            if($productData->product_id != null && $productName != null){
-                //Product has been created before
-                $oldProductId = $productData->product_id;
-            }else{
-                //Product has not been created before but record exists. Create new product and update record.
-            }
-
-            $newProduct =$stripe->products->create(['name' => $productName,]);
-            $productData->product_id = $newProduct->id;
-            $productData->plan_name = $productName;
-            $productData->save();
-
-            $product = $productData;
-        }else{
-
-            $newProduct = $stripe->products->create(['name' => $productName,]);
-
-            $product = new GatewayProducts();
-            $product->plan_id = $planId;
-            $product->plan_name = $productName;
-            $product->gateway_code = "stripe";
-            $product->gateway_title = "Stripe";
-            $product->product_id = $newProduct->id;
-            $product->save();
-        }
-
-
-        //check if price exists
-        if($product->price_id != null){
-            //Price exists
-            // Since stripe api does not allow to update recurring values, we deactivate all prices added to this product before and add a new price object.
-
-            // Deactivate all prices
-            foreach ($stripe->prices->all(['product' => $product->product_id]) as $oldPrice) {
-                $stripe->prices->update($oldPrice->id, ['active' => false]);
-            }
-
-            // One-Time price
-            if($type == "o"){
-                $updatedPrice = $stripe->prices->create([
-                    'unit_amount' => $price,
-                    'currency' => $currency,
-                    'product' => $product->product_id,
-                ]);
-                $product->price_id = $updatedPrice->id;
-                $product->save();
-            }else{
-                // Subscription
-
-                $oldPriceId = $product->price_id;
-
-                $updatedPrice = $stripe->prices->create([
-                    'unit_amount' => $price,
-                    'currency' => $currency,
-                    'recurring' => ['interval' => $frequency == "m" ? 'month' : 'year'],
-                    'product' => $product->product_id,
-                ]);
-                $product->price_id = $updatedPrice->id;
-                $product->save();
-
-                $history = new OldGatewayProducts();
-                $history->plan_id = $planId;
-                $history->plan_name = $productName;
-                $history->gateway_code = 'stripe';
-                $history->product_id = $product->product_id;
-                $history->old_product_id = $oldProductId;
-                $history->old_price_id = $oldPriceId;
-                $history->new_price_id = $updatedPrice->id;
-                $history->status = 'check';
-                $history->save();
-
-                $tmp = self::updateUserData();
-
-            }
-        }else{
-            // One-Time price
-            if($type == "o"){
-                $updatedPrice = $stripe->prices->create([
-                    'unit_amount' => $price,
-                    'currency' => $currency,
-                    'product' => $product->product_id,
-                ]);
-                $product->price_id = $updatedPrice->id;
-                $product->save();
-            }else{
-                // Subscription
-                $updatedPrice = $stripe->prices->create([
-                    'unit_amount' => $price,
-                    'currency' => $currency,
-                    'recurring' => ['interval' => $frequency == "m" ? 'month' : 'year'],
-                    'product' => $product->product_id,
-                ]);
-                $product->price_id = $updatedPrice->id;
-                $product->save();
-            }
-        }
-
-    }catch(\Exception $ex){
-        error_log("StripeController::saveProduct()\n".$ex->getMessage());
-        return back()->with(['message' => $ex->getMessage(), 'type' => 'error']);
-    }
-
     }
 
 
     /**
      * Used to generate new product id and price id of all saved membership plans in stripe gateway.
      */
-    public static function saveAllProducts(){
-        try{
+    public static function saveAllProducts()
+    {
+        try {
 
             $gateway = Gateways::where("code", "stripe")->first();
-            if($gateway == null) { 
+            if ($gateway == null) {
                 return back()->with(['message' => __('Please enable Stripe'), 'type' => 'error']);
-                abort(404); } 
+                abort(404);
+            }
 
 
-            if($gateway->mode == 'sandbox'){
+            if ($gateway->mode == 'sandbox') {
                 $key = $gateway->sandbox_client_secret;
-            }else{
+            } else {
                 $key = $gateway->live_client_secret;
             }
 
@@ -543,11 +567,11 @@ class StripeController extends Controller
             $allUsers = User::all();
             foreach ($allUsers as $aUser) {
 
-                if(in_array($aUser->stripe_id, $currentCustomerIdsArray) == false){
+                if (in_array($aUser->stripe_id, $currentCustomerIdsArray) == false) {
 
                     $userData = [
                         "email" => $aUser->email,
-                        "name" => $aUser->name." ".$aUser->surname,
+                        "name" => $aUser->name . " " . $aUser->surname,
                         "phone" => $aUser->phone,
                         "address" => [
                             "line1" => $aUser->address,
@@ -574,31 +598,36 @@ class StripeController extends Controller
                 self::saveProduct($plan->id, $plan->name, $plan->price, $freq, $typ);
             }
 
-        }catch(\Exception $ex){
-            error_log("StripeController::saveAllProducts()\n".$ex->getMessage());
+            // Create webhook of stripe
+            $tmp = self::createWebhook();
+
+        } catch (\Exception $ex) {
+            error_log("StripeController::saveAllProducts()\n" . $ex->getMessage());
             return back()->with(['message' => $ex->getMessage(), 'type' => 'error']);
         }
-
     }
 
 
 
-    public static function getSubscriptionDaysLeft(){
+    public static function getSubscriptionDaysLeft()
+    {
 
         // $plan = PaymentPlans::find($request->plan);
         $user = Auth::user();
         $settings = Setting::first();
 
         $gateway = Gateways::where("code", "stripe")->first();
-        if($gateway == null) { abort(404); } 
+        if ($gateway == null) {
+            abort(404);
+        }
 
         $currency = Currency::where('id', $gateway->currency)->first()->code;
 
-        if($gateway->mode == 'sandbox'){
+        if ($gateway->mode == 'sandbox') {
             config(['cashier.key' => $gateway->sandbox_client_id]);
-            config(['cashier.secret' => $gateway->sandbox_client_secret]); 
-            config(['cashier.currency' => $currency]); 
-        }else{
+            config(['cashier.secret' => $gateway->sandbox_client_secret]);
+            config(['cashier.currency' => $currency]);
+        } else {
             config(['cashier.key' => $gateway->live_client_id]); //$settings->stripe_key
             config(['cashier.secret' => $gateway->live_client_secret]); //$settings->stripe_secret
             config(['cashier.currency' => $currency]); //currency()->code
@@ -607,9 +636,9 @@ class StripeController extends Controller
         $sub = $user->subscriptions()->where('stripe_status', 'active')->orWhere('stripe_status', 'trialing')->first();
         $activeSub = $sub->asStripeSubscription();
 
-        if($activeSub->status == 'active'){
+        if ($activeSub->status == 'active') {
             return \Carbon\Carbon::now()->diffInDays(\Carbon\Carbon::createFromTimeStamp($activeSub->current_period_end));
-        }else{
+        } else {
             error_log($sub->trial_ends_at);
             return \Carbon\Carbon::now()->diffInDays(\Carbon\Carbon::parse($sub->trial_ends_at));
         }
@@ -618,23 +647,26 @@ class StripeController extends Controller
 
     }
 
- 
-    public static function getSubscriptionRenewDate(){
+
+    public static function getSubscriptionRenewDate()
+    {
 
         // $plan = PaymentPlans::find($request->plan);
         $user = Auth::user();
         $settings = Setting::first();
 
         $gateway = Gateways::where("code", "stripe")->first();
-        if($gateway == null) { abort(404); } 
+        if ($gateway == null) {
+            abort(404);
+        }
 
         $currency = Currency::where('id', $gateway->currency)->first()->code;
 
-        if($gateway->mode == 'sandbox'){
+        if ($gateway->mode == 'sandbox') {
             config(['cashier.key' => $gateway->sandbox_client_id]);
-            config(['cashier.secret' => $gateway->sandbox_client_secret]); 
-            config(['cashier.currency' => $currency]); 
-        }else{
+            config(['cashier.secret' => $gateway->sandbox_client_secret]);
+            config(['cashier.currency' => $currency]);
+        } else {
             config(['cashier.key' => $gateway->live_client_id]); //$settings->stripe_key
             config(['cashier.secret' => $gateway->live_client_secret]); //$settings->stripe_secret
             config(['cashier.currency' => $currency]); //currency()->code
@@ -643,41 +675,47 @@ class StripeController extends Controller
         $activeSub = $user->subscriptions()->where('stripe_status', 'active')->orWhere('stripe_status', 'trialing')->first()->asStripeSubscription();
 
         return \Carbon\Carbon::createFromTimeStamp($activeSub->current_period_end)->format('F jS, Y');
-
     }
 
     /**
      * Checks status directly from gateway and updates database if cancelled or suspended.
      */
-    public static function getSubscriptionStatus(){
+    public static function getSubscriptionStatus($incomingUserId = null)
+    {
 
         // $plan = PaymentPlans::find($request->plan);
-        $user = Auth::user();
+        if($incomingUserId != null){
+            $user = User::where('id', $incomingUserId)->first();
+        }else{
+            $user = Auth::user();
+        }
         $settings = Setting::first();
 
         $gateway = Gateways::where("code", "stripe")->first();
-        if($gateway == null) { abort(404); } 
+        if ($gateway == null) {
+            abort(404);
+        }
 
         $currency = Currency::where('id', $gateway->currency)->first()->code;
 
-        if($gateway->mode == 'sandbox'){
+        if ($gateway->mode == 'sandbox') {
             config(['cashier.key' => $gateway->sandbox_client_id]);
-            config(['cashier.secret' => $gateway->sandbox_client_secret]); 
-            config(['cashier.currency' => $currency]); 
-        }else{
+            config(['cashier.secret' => $gateway->sandbox_client_secret]);
+            config(['cashier.currency' => $currency]);
+        } else {
             config(['cashier.key' => $gateway->live_client_id]); //$settings->stripe_key
             config(['cashier.secret' => $gateway->live_client_secret]); //$settings->stripe_secret
             config(['cashier.currency' => $currency]); //currency()->code
         }
 
         $sub = $user->subscriptions()->where('stripe_status', 'active')->orWhere('stripe_status', 'trialing')->first();
-        if($sub != null){
-            if($sub->paid_with == 'stripe'){
+        if ($sub != null) {
+            if ($sub->paid_with == 'stripe') {
                 $activeSub = $sub->asStripeSubscription();
 
-                if ($activeSub->status == 'active' or $activeSub->status == 'trialing'){
+                if ($activeSub->status == 'active' or $activeSub->status == 'trialing') {
                     return true;
-                }else{
+                } else {
                     $activeSub->stripe_status = 'cancelled';
                     $activeSub->ends_at = \Carbon\Carbon::now();
                     $activeSub->save();
@@ -687,35 +725,36 @@ class StripeController extends Controller
         }
 
         return false;
-        
-
     }
 
 
-    public static function checkIfTrial(){
+    public static function checkIfTrial()
+    {
 
         // $plan = PaymentPlans::find($request->plan);
         $user = Auth::user();
         $settings = Setting::first();
 
         $gateway = Gateways::where("code", "stripe")->first();
-        if($gateway == null) { abort(404); } 
+        if ($gateway == null) {
+            abort(404);
+        }
 
         $currency = Currency::where('id', $gateway->currency)->first()->code;
 
-        if($gateway->mode == 'sandbox'){
+        if ($gateway->mode == 'sandbox') {
             config(['cashier.key' => $gateway->sandbox_client_id]);
-            config(['cashier.secret' => $gateway->sandbox_client_secret]); 
-            config(['cashier.currency' => $currency]); 
-        }else{
+            config(['cashier.secret' => $gateway->sandbox_client_secret]);
+            config(['cashier.currency' => $currency]);
+        } else {
             config(['cashier.key' => $gateway->live_client_id]); //$settings->stripe_key
             config(['cashier.secret' => $gateway->live_client_secret]); //$settings->stripe_secret
             config(['cashier.currency' => $currency]); //currency()->code
         }
 
         $sub = $user->subscriptions()->where('stripe_status', 'active')->orWhere('stripe_status', 'trialing')->first();
-        if($sub != null){
-            if($sub->paid_with == 'stripe'){
+        if ($sub != null) {
+            if ($sub->paid_with == 'stripe') {
                 // $activeSub = $sub->asStripeSubscription();
                 // return $activeSub->onTrial();
                 return $user->subscription($sub->name)->onTrial();
@@ -723,8 +762,6 @@ class StripeController extends Controller
         }
 
         return false;
-        
-
     }
 
 
@@ -732,90 +769,94 @@ class StripeController extends Controller
     /**
      * Since price id is changed, we must update user data, i.e cancel current subscriptions.
      */
-    public static function updateUserData(){
+    public static function updateUserData()
+    {
 
-        try{
+        try {
 
-        $history = OldGatewayProducts::where([
-            "gateway_code" => 'stripe',
-            "status" => 'check'
-        ])->get();
+            $history = OldGatewayProducts::where([
+                "gateway_code" => 'stripe',
+                "status" => 'check'
+            ])->get();
 
-        if($history != null){
+            if ($history != null) {
 
-            $user = Auth::user();
+                $user = Auth::user();
 
-            $gateway = Gateways::where("code", "stripe")->first();
-            if($gateway == null) { abort(404); } 
-
-            $key = null;
-
-            if($gateway->mode == 'sandbox'){
-                $key = $gateway->sandbox_client_secret;
-            }else{
-                $key = $gateway->live_client_secret;
-            }
-            
-            $stripe = new \Stripe\StripeClient($key);
-
-            foreach ($history as $record) {
-
-                // check record current status from gateway
-                $lookingFor = $record->old_price_id; 
-
-                // if active disable it
-                if($lookingFor != 'undefined'){
-                    $stripe->prices->update($lookingFor, ['active' => false]);
+                $gateway = Gateways::where("code", "stripe")->first();
+                if ($gateway == null) {
+                    abort(404);
                 }
-                
-                // search subscriptions for record
-                $subs = SubscriptionsModel::where([
-                    'stripe_status' => 'active',
-                    'stripe_price'  => $lookingFor 
-                ])->get();
 
-                if($subs != null){
-                    foreach ($subs as $sub) {
-                        // cancel subscription order from gateway
-                        $user->subscription($sub->name)->cancelNow();
+                $key = null;
 
-                        // cancel subscription from our database
-                        $sub->stripe_status = 'cancelled';
-                        $sub->ends_at = \Carbon\Carbon::now();
-                        $sub->save();
+                if ($gateway->mode == 'sandbox') {
+                    $key = $gateway->sandbox_client_secret;
+                } else {
+                    $key = $gateway->live_client_secret;
+                }
+
+                $stripe = new \Stripe\StripeClient($key);
+
+                foreach ($history as $record) {
+
+                    // check record current status from gateway
+                    $lookingFor = $record->old_price_id;
+
+                    // if active disable it
+                    if ($lookingFor != 'undefined') {
+                        $stripe->prices->update($lookingFor, ['active' => false]);
                     }
+
+                    // search subscriptions for record
+                    $subs = SubscriptionsModel::where([
+                        'stripe_status' => 'active',
+                        'stripe_price'  => $lookingFor
+                    ])->get();
+
+                    if ($subs != null) {
+                        foreach ($subs as $sub) {
+                            // cancel subscription order from gateway
+                            $user->subscription($sub->name)->cancelNow();
+
+                            // cancel subscription from our database
+                            $sub->stripe_status = 'cancelled';
+                            $sub->ends_at = \Carbon\Carbon::now();
+                            $sub->save();
+                        }
+                    }
+
+                    $record->status = 'checked';
+                    $record->save();
                 }
-                
-                $record->status = 'checked';
-                $record->save();
-
             }
+        } catch (\Exception $th) {
+            error_log("StripeController::updateUserData(): " . $th->getMessage());
+            return ["result" => Str::before($th->getMessage(), ':')];
+            // return Str::before($th->getMessage(),':');
         }
-
-    } catch (\Exception $th) {
-        error_log("StripeController::updateUserData(): ".$th->getMessage());
-        return ["result" => Str::before($th->getMessage(),':')];
-        // return Str::before($th->getMessage(),':');
-    }
     }
 
 
 
-    public static function cancelSubscribedPlan($planId, $subsId){
-        try{
+    public static function cancelSubscribedPlan($planId, $subsId)
+    {
+        try {
             $user = Auth::user();
             $settings = Setting::first();
 
             $gateway = Gateways::where("code", "stripe")->first();
-            if($gateway == null) { abort(404); } 
+            if ($gateway == null) {
+                abort(404);
+            }
 
             $currency = Currency::where('id', $gateway->currency)->first()->code;
 
-            if($gateway->mode == 'sandbox'){
+            if ($gateway->mode == 'sandbox') {
                 config(['cashier.key' => $gateway->sandbox_client_id]);
-                config(['cashier.secret' => $gateway->sandbox_client_secret]); 
-                config(['cashier.currency' => $currency]); 
-            }else{
+                config(['cashier.secret' => $gateway->sandbox_client_secret]);
+                config(['cashier.currency' => $currency]);
+            } else {
                 config(['cashier.key' => $gateway->live_client_id]); //$settings->stripe_key
                 config(['cashier.secret' => $gateway->live_client_secret]); //$settings->stripe_secret
                 config(['cashier.currency' => $currency]); //currency()->code
@@ -826,21 +867,142 @@ class StripeController extends Controller
 
             return true;
         } catch (\Exception $th) {
-            error_log("\n------------------------\nStripeController::cancelSubscribedPlan(): ".$th->getMessage()."\n------------------------\n");
+            error_log("\n------------------------\nStripeController::cancelSubscribedPlan(): " . $th->getMessage() . "\n------------------------\n");
             // return Str::before($th->getMessage(),':');
             return false;
         }
     }
 
+    function verifyIncomingJson(Request $request){
+
+        $gateway = Gateways::where("code", "stripe")->first();
+
+        if(isset($gateway->webhook_secret)){
+            $secret = $gateway->webhook_secret;
+            if(Str::startsWith($secret, 'whsec') == true){
+                $endpoint_secret = $secret;
+
+                if($request->hasHeader('stripe-signature') == true){
+                    $sig_header = $request->header('stripe-signature');
+                }else{
+                    Log::error('(Webhooks) StripeController::verifyIncomingJson() -> Invalid header');
+                    return null;
+                }
+
+                $payload = $request->getContent();
+                $event = null;
+
+                try {
+                    $event = \Stripe\Webhook::constructEvent(
+                        $payload, $sig_header, $endpoint_secret
+                    );
+                    return json_encode($event);
+                } catch(\UnexpectedValueException $e) {
+                    // Invalid payload
+                    Log::error('(Webhooks) StripeController::verifyIncomingJson() -> Invalid payload : '. $payload);
+                    return null;
+                } catch(\Stripe\Exception\SignatureVerificationException $e) {
+                    // Invalid signature
+                    Log::error('(Webhooks) StripeController::verifyIncomingJson() -> Invalid signature : '. $payload);
+                    return null;
+                }
+            }
+        }
+
+        return null;
+
+    }
 
 
-    // Table structure of gatewayproducts
-    // $table->integer('plan_id')->default(0);
-    // $table->string('plan_name')->nullable();
-    // $table->string('gateway_code')->nullable();
-    // $table->string('gateway_title')->nullable();
-    // $table->string('product_id')->nullable();
-    // $table->string('price_id')->nullable();
+    public function handleWebhook(Request $request){
+
+        // Log::info($request->getContent());
+        // $verified = $request->getContent();
+
+        $verified = self::verifyIncomingJson($request);
+
+        if($verified != null){
+
+            // Retrieve the JSON payload
+            $payload = $verified;
+
+            // Fire the event with the payload
+            event(new StripeWebhookEvent($payload));
+        
+            return response()->json(['success' => true]);
+        
+        }else{
+            // Incoming json is NOT verified
+            abort(404);
+        }
+
+    }
 
 
+    public static function createWebhook(){
+
+        try{
+
+            // $user = Auth::user();
+
+            $gateway = Gateways::where("code", "stripe")->first();
+            if ($gateway == null) {
+                abort(404);
+            }
+
+            $key = null;
+
+            if ($gateway->mode == 'sandbox') {
+                $key = $gateway->sandbox_client_secret;
+            } else {
+                $key = $gateway->live_client_secret;
+            }
+
+            $stripe = new \Stripe\StripeClient($key);
+
+            $webhooks = $stripe->webhookEndpoints->all();
+
+            if(count($webhooks['data']) > 0){
+                // There is/are webhook(s) defined. Remove existing.
+                foreach ($webhooks['data'] as $hook) {
+                    $tmp = json_decode($stripe->webhookEndpoints->delete($hook->id,[]));
+                    if(isset($tmp->deleted)){
+                        if($tmp->deleted == false){
+                            Log::error('Webhook '.$hook->id.' could not deleted.');
+                        }
+                    }else{
+                        Log::error('Webhook '.$hook->id.' could not deleted.');
+                    }
+                }
+            }
+
+            // Create new webhook
+
+            $url = url('/').'/webhooks/stripe';
+
+            $events = [
+                'invoice.paid',                     // A payment is made on a subscription.
+                'customer.subscription.deleted'     // A subscription is cancelled.
+            ];
+
+            $response = $stripe->webhookEndpoints->create([
+                'url' => $url,
+                'enabled_events' => $events,
+            ]);
+
+            $gateway->webhook_id = $response->id;
+            $gateway->webhook_secret = $response->secret;
+            $gateway->save();
+
+        } catch (AuthenticationException $th) {
+            error_log("StripeController::createWebhook(): ".$th->getMessage());
+            return back()->with(['message' => "Stripe Authentication Error. Invalid API Key provided.", 'type' => 'error']);
+        } catch (InvalidArgumentException $th) {
+            error_log("StripeController::createWebhook(): ".$th->getMessage());
+            return back()->with(['message' => "You must provide Stripe API Key.", 'type' => 'error']);
+        } catch (\Exception $th) {
+            error_log("StripeController::createWebhook(): ".$th->getMessage());
+            return back()->with(['message' => "Stripe Error : ".$th->getMessage(), 'type' => 'error']);
+        }
+    }
 }

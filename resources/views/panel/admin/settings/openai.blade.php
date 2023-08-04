@@ -127,7 +127,15 @@
                                     </select>
 								</div>
 							</div>
-
+							<div class="col-md-12">
+								<div class="mb-3">
+                                    <label class="form-label">{{__('Default Stream Server')}}</label>
+                                    <select type="text" class="form-select" name="openai_default_stream_server" id="openai_default_stream_server" required>
+                                        <option value="backend" {{$settings_two->openai_default_stream_server == "backend" ? 'selected' : ''}}>{{__('Backend')}}</option>
+                                        <option value="frontend" {{$settings_two->openai_default_stream_server == "frontend" ? 'selected' : ''}}>{{__('Frontend')}}</option>
+                                    </select>
+								</div>
+							</div>
 							<div class="col-md-6">
 								<div class="mb-3">
 									<label class="form-label">{{__('Maximum Input Length')}}</label>
@@ -145,7 +153,7 @@
 									<input type="number" class="form-control" id="openai_max_output_length" name="opena_max_output_length" min="0" max="2000" value="{{$setting->openai_max_output_length}}" required>
 									<div class="bg-blue-100 text-blue-600 rounded-xl !p-3 !mt-2 dark:bg-blue-600/20 dark:text-blue-200">
 										<svg xmlns="http://www.w3.org/2000/svg" class="inline !me-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path> <path d="M12 9h.01"></path> <path d="M11 12h1v4h1"></path> </svg>
-										{{__('In Words. OpenAI has a hard limit based on Token limits for each model. Refer to OpenAI documentation to learn more. As a recommended by OpenAI, max result length is capped at 2000 words')}}
+										{{__('In Words. OpenAI has a hard limit based on Token limits for each model. Refer to OpenAI documentation to learn more. As a recommended by OpenAI, max result length is capped at 2000 tokens')}}
                                         {{__('The maximum output length refers to the point at which the AI-generated response will stop. It can occur when the response reaches 4096 bytes or when the generated content is considered sufficient for the given context.')}}
 									</div>
 								</div>

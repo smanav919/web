@@ -1,9 +1,31 @@
 <!-- Start image generator -->
 @if($openai->type == 'image')
+<div class="btn-group mb-3" role="group"><a href="{{route('dashboard.user.openai.generator', 'ai_image_generator')}}">
+    <button class="btn btn-light btn-default"  autofocus="autofocus" style="background-color: #330582;color:white">
+       OpenAI
+    </button>
+</a></div>
+<div class="btn-group mb-3" role="group"><a href="{{route('dashboard.user.thenextleg.generator', 'ai_image_generator')}}">
+    <button class="btn btn-light btn-default" autofocus="autofocus" >
+       TheNextLeg
+    </button>
+</a></div>
     <div class="row row-deck row-cards">
-        <div class="col-12">
+        <div class="col-12 flex-column">
             <div class="card bg-[#F3E2FD] !shadow-sm dark:bg-[#14171C] dark:shadow-black">
                 <div class="card-body md:p-10">
+                    <div class="mb-3">
+                        <div class="form-selectgroup flex flex-row">
+                          <label class="form-selectgroup-item-image-gen" image-generator="dall-e">
+                            <input type="radio" name="icons" value="dall-e" class="form-selectgroup-input" checked/>
+                            <h3 class="form-selectgroup-label border-none dark:!text-white">DALL-E</h3>
+                          </label>
+                          <label class="form-selectgroup-item-image-gen" image-generator="stablediffusion">
+                            <input type="radio" name="icons" value="stablediffusion" class="form-selectgroup-input" />
+                            <h3 class="form-selectgroup-label border-none dark:!text-white">Stable Diffusion</h3>
+                          </label>
+                        </div>
+                    </div>
                     <div class="row">
                         <label for="description" class="h2 mb-3">{{__('Explain your idea')}}. | <a onclick="return fillAnExample();" class="text-success" href="">{{__('Generate example prompt')}}</a> </label>
                         <form id="openai_generator_form" onsubmit="return sendOpenaiGeneratorForm();">
@@ -18,7 +40,7 @@
                                 @endphp
                                 @foreach(json_decode($openai->questions) as $question)
                                     @if($question->type == 'textarea')
-                                        <input class="image-input-for-fillanexample form-control bg-[#fff] rounded-full h-[53px] text-[#000] !shadow-sm placeholder:text-black placeholder:text-opacity-50 focus:bg-white focus:border-white dark:!border-none dark:!bg-[--lqd-header-search-bg] dark:focus:!bg-[--lqd-header-search-bg] dark:placeholder:text-[#a5a9b1]" type="text" id="{{$question->name}}" name="{{$question->name}}" placeholder="{{$placeholders[array_rand($placeholders)]}}">
+                                        <textarea class="image-input-for-fillanexample form-control bg-[#fff] rounded-full h-[53px] text-[#000] resize-none !shadow-sm placeholder:text-black placeholder:text-opacity-50 focus:bg-white focus:border-white dark:!border-none dark:!bg-[--lqd-header-search-bg] dark:focus:!bg-[--lqd-header-search-bg] dark:placeholder:text-[#a5a9b1] max-md:!min-h-[120px] max-md:rounded-md" type="text" id="{{$question->name}}" name="{{$question->name}}" placeholder="{{$placeholders[array_rand($placeholders)]}}"></textarea>
                                     @endif
                                 @endforeach
                                 <button id="openai_generator_button" class="btn btn-primary h-[36px] absolute top-1/2 end-[1rem] -translate-y-1/2 hover:-translate-y-1/2 hover:scale-110 max-lg:relative max-lg:top-auto max-lg:right-auto max-lg:translate-y-0 max-lg:w-full max-lg:mt-2" type="submit">
@@ -40,7 +62,6 @@
 										</svg>
 									</span>
                                 </a>
-
                                 <div class="max-sm:-order-1 max-sm:mb-4 max-sm:w-full">
                                     <div class="flex justify-between flex-wrap mb-2">
                                         <div class="flex items-center mr-3">
@@ -77,6 +98,10 @@
                                 </div>
                             </div>
                             <div id="advanced-settings" class="collapse">
+                                <div class="negative-prompt-form hidden mt-3" stable-diffusion>
+                                    <label class="form-label text-heading">{{__('Negative Prompt')}}</label>
+                                    <textarea class="form-control bg-[#fff] rounded-full h-[53px] text-[#000] resize-none !shadow-sm placeholder:text-black placeholder:text-opacity-50 focus:bg-white focus:border-white dark:!border-none dark:!bg-[--lqd-header-search-bg] dark:focus:!bg-[--lqd-header-search-bg] dark:placeholder:text-[#a5a9b1]" type="text" id="negative_prompt" name="negative_prompt"></textarea>
+                                </div>
                                 <div class="flex flex-wrap justify-between gap-3 mt-8">
                                     @foreach(json_decode($openai->questions) as $question)
                                         @if($question->type == 'select')
@@ -169,7 +194,6 @@
                                                 <option value="5">5</option>
                                             </select>
                                         </div>
-
                                 </div>
                             </div>
                         </form>
@@ -181,5 +205,14 @@
         @include('panel.user.openai.generator_components.generator_sidebar_table')
         </div>
     </div>
+    <script>
+       	const imageGeneratorFields = document.querySelectorAll('.form-selectgroup-item-image-gen')
+        imageGeneratorFields.forEach(field => {
+            field.addEventListener('click', event => {
+                if(field.getAttribute('image-generator') == "dall-e") document.querySelector('[stable-diffusion]').classList.add('hidden');
+                else document.querySelector('[stable-diffusion]').classList.remove('hidden')
+            })
+	    })
+    </script>
 @endif
 <!-- End image generator -->

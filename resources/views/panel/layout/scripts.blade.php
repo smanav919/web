@@ -13,6 +13,22 @@
 <script src="/assets/openai/js/toastr.min.js"></script>
 <script src="/assets/libs/tom-select/dist/js/tom-select.base.min.js?1674944402" defer></script>
 
+<script>
+    var magicai_localize = {
+        signup: @json(__('Sign Up')),
+        please_wait: @json(__('Please Wait...')),
+        sign_in: @json(__('Sign In')),
+        login_redirect: @json(__('Login Successful, Redirecting...')),
+        register_redirect: @json(__('Registration is complete. Redirecting...')),
+        password_reset_link: @json(__('Password reset link sent succesfully. Please also check your spam folder.')),
+        password_reset_done: @json(__('Password succesfully changed.')),
+        password_reset: @json(__('Reset Password')),
+        missing_email: @json(__('Please enter your email address.')),
+        missing_password: @json(__('Please enter your password.')),
+        content_copied_to_clipboard: @json(__('Content copied to clipboard.')),
+    }
+</script>
+
 
 <!-- PAGES JS-->
 @guest()

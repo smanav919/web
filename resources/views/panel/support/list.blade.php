@@ -46,14 +46,14 @@
 						@foreach($items as $entry)
 							<tr>
 								<td class="sort-ticketid text-capitalize">{{$entry->ticket_id}}</td>
-								<td class="sort-Status">{{$entry->status}}</td>
-								<td class="sort-Category">{{$entry->category}}</td>
-								<td class="sort-Subject">{{$entry->subject}}</td>
-								<td class="sort-Priority">{{$entry->priority}}</td>
+								<td class="sort-Status">{{__($entry->status)}}</td>
+								<td class="sort-Category">{{__($entry->category)}}</td>
+								<td class="sort-Subject">{{__($entry->subject)}}</td>
+								<td class="sort-Priority">{{__($entry->priority)}}</td>
 								<td class="sort-date" data-date="{{strtotime($entry->created_at)}}">{{$entry->created_at}}</td>
 								<td class="sort-date-update" data-date="{{strtotime($entry->updated_at)}}">{{$entry->updated_at}}</td>
 								<td>
-									<a href="{{route('dashboard.support.view', $entry->ticket_id)}}" class="btn btn-sm btn-success">View</a>
+									<a href="{{route('dashboard.support.view', $entry->ticket_id)}}" class="btn btn-sm btn-success">{{__('View')}}</a>
 								</td>
 							</tr>
 						@endforeach

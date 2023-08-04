@@ -101,7 +101,7 @@ function editWorkbook( workbook_slug ) {
 	"use strict";
 
 	document.getElementById( "workbook_button" ).disabled = true;
-	document.getElementById( "workbook_button" ).innerHTML = "Please Wait";
+	document.getElementById( "workbook_button" ).innerHTML = magicai_localize.please_wait;
 	document.querySelector( '#app-loading-indicator' )?.classList?.remove( 'opacity-0' );
 	tinyMCE.get( "workbook_text" ).save();
 	var formData = new FormData();

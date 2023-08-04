@@ -28,7 +28,7 @@ function userSave( user_id ) {
 	"use strict";
 
 	document.getElementById( "user_edit_button" ).disabled = true;
-	document.getElementById( "user_edit_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "user_edit_button" ).innerHTML = magicai_localize.please_wait;
 
 	var formData = new FormData();
 	formData.append( 'user_id', user_id );
@@ -70,7 +70,7 @@ function userProfileSave() {
 	"use strict";
 
 	document.getElementById( "user_edit_button" ).disabled = true;
-	document.getElementById( "user_edit_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "user_edit_button" ).innerHTML = magicai_localize.please_wait;
 
 	var formData = new FormData();
 	formData.append( 'name', $( "#name" ).val() );

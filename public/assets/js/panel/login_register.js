@@ -16,22 +16,22 @@ function LoginForm() {
 	"use strict";
 
 	document.getElementById( "LoginFormButton" ).disabled = true;
-	document.getElementById( "LoginFormButton" ).innerHTML = "Please Wait..";
+	document.getElementById( "LoginFormButton" ).innerHTML = magicai_localize.please_wait;
 	document.querySelector( '#app-loading-indicator' )?.classList?.remove( 'opacity-0' );
 
 	var email = $( "#email" ).val();
 	if ( email == "" ) {
-		toastr.error( "Please enter your email address." );
+		toastr.error( magicai_localize.missing_email);
 		document.getElementById( "LoginFormButton" ).disabled = false;
-		document.getElementById( "LoginFormButton" ).innerHTML = "Sign In";
+		document.getElementById( "LoginFormButton" ).innerHTML = magicai_localize.sign_in;
 		document.querySelector( '#app-loading-indicator' )?.classList?.add( 'opacity-0' );
 		return false;
 	}
 	var password = $( "#password" ).val();
 	if ( password == "" ) {
-		toastr.error( "Please enter your password." );
+		toastr.error( magicai_localize.missing_password );
 		document.getElementById( "LoginFormButton" ).disabled = false;
-		document.getElementById( "LoginFormButton" ).innerHTML = "Sign In";
+		document.getElementById( "LoginFormButton" ).innerHTML = magicai_localize.sign_in;
 		document.querySelector( '#app-loading-indicator' )?.classList?.add( 'opacity-0' );
 		return false;
 	}
@@ -48,7 +48,7 @@ function LoginForm() {
 		processData: false,
         cache: false,
 		success: function ( data ) {
-			toastr.success( "Login Successful, Redirecting..." );
+			toastr.success( magicai_localize.login_redirect );
 			setTimeout( function () {
 				location.reload();
 				document.querySelector( '#app-loading-indicator' )?.classList?.add( 'opacity-0' );
@@ -64,7 +64,7 @@ function LoginForm() {
 				toastr.error( data.responseJSON.message );
 			}
 			document.getElementById( "LoginFormButton" ).disabled = false;
-			document.getElementById( "LoginFormButton" ).innerHTML = "Sign In";
+			document.getElementById( "LoginFormButton" ).innerHTML = magicai_localize.sign_in;
 			document.querySelector( '#app-loading-indicator' )?.classList?.add( 'opacity-0' );
 		}
 	} );
@@ -76,7 +76,7 @@ function RegisterForm() {
 	"use strict";
 
 	document.getElementById( "RegisterFormButton" ).disabled = true;
-	document.getElementById( "RegisterFormButton" ).innerHTML = "Please Wait";
+	document.getElementById( "RegisterFormButton" ).innerHTML = magicai_localize.please_wait;
 	document.querySelector( '#app-loading-indicator' )?.classList?.remove( 'opacity-0' );
 
 	var formData = new FormData();
@@ -98,7 +98,7 @@ function RegisterForm() {
 		contentType: false,
 		processData: false,
 		success: function ( data ) {
-			toastr.success( 'Registration is complete. Redirecting...' );
+			toastr.success( magicai_localize.register_redirect );
 			setTimeout( function () {
 				location.reload();
 				document.querySelector( '#app-loading-indicator' )?.classList?.add( 'opacity-0' );
@@ -118,7 +118,7 @@ function RegisterForm() {
                 }, 2500 );
             }else {
                 document.getElementById( "RegisterFormButton" ).disabled = false;
-                document.getElementById( "RegisterFormButton" ).innerHTML = "Sign Up!";
+                document.getElementById( "RegisterFormButton" ).innerHTML = magicai_localize.signup;
                 document.querySelector( '#app-loading-indicator' )?.classList?.add( 'opacity-0' );
             }
 		}
@@ -132,7 +132,7 @@ function PasswordResetMailForm() {
 	"use strict";
 
 	document.getElementById( "PasswordResetFormButton" ).disabled = true;
-	document.getElementById( "PasswordResetFormButton" ).innerHTML = "Please Wait";
+	document.getElementById( "PasswordResetFormButton" ).innerHTML = magicai_localize.please_wait;
 	document.querySelector( '#app-loading-indicator' )?.classList?.remove( 'opacity-0' );
 
 	var formData = new FormData();
@@ -145,7 +145,7 @@ function PasswordResetMailForm() {
 		contentType: false,
 		processData: false,
 		success: function ( data ) {
-			toastr.success( 'Password reset link sent succesfully. Please also check your spam folder.' );
+			toastr.success( magicai_localize.password_reset_link );
 			document.querySelector( '#app-loading-indicator' )?.classList?.add( 'opacity-0' );
 		},
 		error: function ( data ) {
@@ -165,7 +165,7 @@ function PasswordReset( password_reset_code ) {
 	"use strict";
 
 	document.getElementById( "PasswordResetFormButton" ).disabled = true;
-	document.getElementById( "PasswordResetFormButton" ).innerHTML = "Please Wait";
+	document.getElementById( "PasswordResetFormButton" ).innerHTML = magicai_localize.please_wait;
 	document.querySelector( '#app-loading-indicator' )?.classList?.remove( 'opacity-0' );
 
 	var formData = new FormData();
@@ -180,7 +180,7 @@ function PasswordReset( password_reset_code ) {
 		contentType: false,
 		processData: false,
 		success: function ( data ) {
-			toastr.success( 'Password succesfully changed.' );
+			toastr.success( magicai_localize.password_reset_done );
 			setTimeout( function () {
 				location.href = '/dashboard';
 				document.querySelector( '#app-loading-indicator' )?.classList?.add( 'opacity-0' );
@@ -192,7 +192,7 @@ function PasswordReset( password_reset_code ) {
 				toastr.error( value );
 			} );
 			document.getElementById( "PasswordResetFormButton" ).disabled = false;
-			document.getElementById( "PasswordResetFormButton" ).innerHTML = "Reset Password";
+			document.getElementById( "PasswordResetFormButton" ).innerHTML = magicai_localize.password_reset;
 			document.querySelector( '#app-loading-indicator' )?.classList?.add( 'opacity-0' );
 		}
 	} );

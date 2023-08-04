@@ -85,11 +85,34 @@ function updateStatus( status, entry_id ) {
 	return false;
 }
 
+function updatePackageStatus( status, entry_id ) {
+	"use strict";
+
+	var formData = new FormData();
+	formData.append( 'status', status );
+	formData.append( 'entry_id', entry_id );
+
+	$.ajax( {
+		type: "post",
+		url: "/dashboard/admin/openai/update-package-status",
+		data: formData,
+		contentType: false,
+		processData: false,
+		success: function ( data ) {
+			toastr.success( 'Status changed succesfully.' );
+		},
+		error: function ( data ) {
+			toastr.error( 'Something went wrong. Please reload the page and try it again.' );
+		}
+	} );
+	return false;
+}
+
 function templateSave( template_id ) {
 	"use strict";
 
 	document.getElementById( "custom_template_button" ).disabled = true;
-	document.getElementById( "custom_template_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "custom_template_button" ).innerHTML = magicai_localize.please_wait;
 
 	var input_name = [];
 	$( ".input_name" ).each( function () {
@@ -108,6 +131,7 @@ function templateSave( template_id ) {
 	formData.append( 'template_id', template_id );
 	formData.append( 'title', $( "#title" ).val() );
 	formData.append( 'filters', $( "#filters" ).val() );
+	formData.append( 'premium', $( "#premium" ).val() );
 	formData.append( 'description', $( "#description" ).val() );
 	formData.append( 'image', $( "#image" ).val() );
 	formData.append( 'color', $( "#color" ).val() );
@@ -145,7 +169,7 @@ function templateChatSave( template_id ) {
 	"use strict";
 
 	document.getElementById( "custom_template_button" ).disabled = true;
-	document.getElementById( "custom_template_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "custom_template_button" ).innerHTML = magicai_localize.please_wait;
 
 
 	var formData = new FormData();

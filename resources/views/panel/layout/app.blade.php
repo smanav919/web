@@ -49,6 +49,16 @@
 		@endif
 	@endauth
 
+	<template id="typing-template">
+		<div class="lqd-typing !inline-flex !items-center !rounded-full !py-2 !px-3 !gap-3 !bg-[#efd8fc] !text-[--lqd-heading-color] !text-xs !leading-none !font-medium">
+			{{__('Typing')}}
+			<div class="lqd-typing-dots !flex !items-center !gap-1">
+				<span class="lqd-typing-dot !w-1 !h-1 !rounded-full"></span>
+				<span class="lqd-typing-dot !w-1 !h-1 !rounded-full"></span>
+				<span class="lqd-typing-dot !w-1 !h-1 !rounded-full"></span>
+			</div>
+		</div>
+	</template>
 
 </body>
 </html>

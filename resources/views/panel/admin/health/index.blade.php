@@ -86,7 +86,7 @@
                                             @if ( $result->notificationMessage === 'Crashed')
                                                 {{ __('Failed to calculate. Your server configuration is preventing this feature from being calculated.') }}
                                             @else
-                                                {{ $result->notificationMessage }}
+                                                {{ str_replace( 'The debug mode was expected to be `false`, but actually was `true`', __('Debug mode is enabled. If this is your production site, it is recommended to disable it.'), $result->notificationMessage) }}
                                             @endif
                                         @else
                                             {{ $result->shortSummary }}
@@ -98,9 +98,98 @@
                     </dl>
                 @endif
 
+                @if (env('APP_STATUS') != 'Demo') 
+                <div class="mt-10">
+                    <h3>{{__('Server Details')}}</h3>
+                    <label class="mb-2" for="log" >{{__('You can copy the below info as simple text with Ctrl+C / Ctrl+V:')}}</label>
+                    <textarea class="w-full form-control" name="log" id="log" cols="30" rows="10">@php echo '== ' . __('GENERAL') . '==' . PHP_EOL;
+                            echo __('Operating System') . ': ' . php_uname() . PHP_EOL;
+                            echo __('PHP Version') .': '. phpversion() . PHP_EOL;
+                            echo __('Laravel Version') .': '. DB::connection()->getPdo()->getAttribute(PDO::ATTR_SERVER_VERSION) . PHP_EOL;
+                            echo __('Mermory Limit') .': '. ini_get('memory_limit') . PHP_EOL;
+                            echo __('Max Input Vars') .': '. ini_get('max_input_vars') . PHP_EOL;
+                            echo __('Post Max Size') .': '. ini_get('post_max_size') . PHP_EOL . PHP_EOL;
+                            echo '== ' . __('ENVIRONMENT') . '==' . PHP_EOL;
+                            echo __('APP_STATUS') .': '. env('APP_STATUS') . PHP_EOL;
+                            echo __('APP_DEBUG') .': '. env('APP_DEBUG') . PHP_EOL;
+                            echo __('APP_LOG_LEVEL') .': '. env('APP_LOG_LEVEL') . PHP_EOL;
+                            echo __('APP_ENV') .': '. env('APP_ENV') . PHP_EOL;
+                            echo PHP_EOL . '== ' . __('LOGS') . '==' . PHP_EOL;
+                            $logFile = storage_path('logs/laravel.log');
+                            if (file_exists($logFile)) {
+                                $logContent = file_get_contents($logFile);
+                                echo htmlentities($logContent);
+                            } else {
+                                echo __('No logged any data.');
+                            }
+                        @endphp
+                    </textarea>
+
+                    <button class="btn mr-2" id="copyButton">
+                        <svg class="mr-2" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M8 8m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z"></path>
+                            <path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"></path>
+                         </svg>
+                        {{__('Copy')}}
+                    </button>
+                    <button class="btn mt-4 mb-8" id="clearLogButton">
+                        <svg class="mr-2" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M4 7l16 0"></path>
+                            <path d="M10 11l0 6"></path>
+                            <path d="M14 11l0 6"></path>
+                            <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
+                            <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
+                         </svg>
+                        {{__('Clear Log File')}}
+                    </button>
+                </div>
+                @endif
+
 			@endif
         </div>
     </div>
 @endsection
 @section('script')
+<script>
+    document.querySelector('textarea').addEventListener('click', function() {
+        this.select();
+    });
+
+    var clearLogButton = document.getElementById('clearLogButton');
+
+    clearLogButton.addEventListener('click', function() {
+        var confirmResult = confirm(@json(__('Are you sure you want to clear the log?')));
+
+        if (confirmResult) {
+            // AJAX request to delete the log file
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/clear-log', true);
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        // Log file successfully deleted, reload the page
+                        location.reload();
+                    } else {
+                        // Error occurred while deleting the log file
+                        alert(@json(__('An error occurred while clearing the log.')));
+                    }
+                }
+            };
+
+            xhr.send();
+        }
+    });
+
+    var copyButton = document.getElementById('copyButton');
+    var logTextarea = document.getElementById('log');
+
+    copyButton.addEventListener('click', function() {
+        logTextarea.select();
+        document.execCommand('copy');
+        toastr.success( @json(__('Copied')) );
+    });
+</script>
 @endsection

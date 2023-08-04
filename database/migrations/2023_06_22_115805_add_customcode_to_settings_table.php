@@ -25,12 +25,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('settings', function (Blueprint $table) {
-            $table->dropColumn([
-                'frontend_code_before_head',
-                'frontend_code_before_body',
-                'dashboard_code_before_body',
-                'dashboard_code_before_body'
-            ]);
+            $table->dropColumn('frontend_code_before_head');
+            $table->dropColumn('frontend_code_before_body');
+            $table->dropColumn('dashboard_code_before_head');
+            $table->dropColumn('dashboard_code_before_body');
         });
     }
 };

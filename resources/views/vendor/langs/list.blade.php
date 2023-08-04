@@ -3,7 +3,18 @@
 
         <div class="col-md-12">
 
-            <h2 class="text-center mb-6">{{__('Editing Language')}}: <span class="text-3xl align-sub">{{country2flag($lang)}}</span> {{ucfirst($lang)}} </h2>
+            @if ( $lang != 'edit' )
+            @php $lang_region = LaravelLocalization::getSupportedLocales()[str_replace('_','-',$lang)]['regional']; @endphp
+            @php $lang_native = LaravelLocalization::getSupportedLocales()[str_replace('_','-',$lang)]['native']; @endphp
+            <h2 class="text-center mb-6">{{__('Editing Language')}}: <span class="text-3xl align-sub mr-2">{{ country2flag(substr($lang_region, strrpos($lang_region, '_') + 1)) }}</span>{{ucfirst($lang_native)}}<span class="ml-2 opacity-20 text-xs">{{$lang}}</h2>
+            @else 
+
+            <div class="alert alert-danger mb-6" role="alert">
+                <strong>{{__('Take a backup before process!')}}</strong><br>
+                {{__('Your changes will override en.json file!')}}
+            </div>
+            <h2 class="text-center mb-6">{{__('Editing Main Strings')}}</h2>
+            @endif
 
             <input type="text" id="search_string" class="form-control rounded-xl mb-6" onkeyup="searchStrings()" placeholder="{{__('Filter strings...')}}">
             <div class="card">
@@ -22,13 +33,13 @@
                             @foreach ($value->toArray() as $key => $element)
                                 @if ($key !== 'code')
                                     @if ( $key === 'en' )
-                                        <td class="min-w-[45%]">
+                                        <td class="w-[45%]">
                                             <div data-name="{{$key}}">{{$element}}</div>
                                         </td>
                                     @else
-                                        <td class="min-w-[50%]">
+                                        <td class="w-[50%]">
                                             <input
-                                                class="py-2 px-2 rounded-md bg-[#F6F6F6] border-none w-full placeholder:text-gray-300"
+                                                class="form-control py-2 px-2 rounded-md bg-[#F6F6F6] border-none w-full placeholder:text-gray-300 dark:border-solid dark:border-[--tblr-border-color] dark:placeholder:text-white/50"
                                                 type="text"
                                                 data-pk="{{$value->code}}"
                                                 data-name="{{$key}}"
@@ -45,7 +56,15 @@
                 </table>
                 </div>
             </div>
-            <div id="save_all" data-lang="{{$lang}}" class="btn btn-primary fixed bottom-6 w-64 left-1/2 -translate-x-1/2 hover:-translate-x-1/2 hover:-translate-y-1">Save</div>
+			<div class="fixed bottom-6 left-[--navbar-width] right-0">
+				<div class="container">
+					<div class="row">
+						<div class="col-md-8 mx-auto !px-8">
+							<div id="save_all" data-lang="{{$lang}}" class="btn btn-primary w-full">Save</div>
+						</div>
+					</div>
+				</div>
+			</div>
         </div>
 @endsection
 @section(config('amamarul-location.scripts_section'))
@@ -54,9 +73,14 @@
     $(document).ready(function() {
         "use strict";
         $('#save_all').click(function() {
+            var demo = @json( env('APP_STATUS') == 'Demo' ? true : false );
+            if ( demo == true ){
+                toastr.info('This feature is disabled in Demo version.');
+                return false;
+            }
 
             document.getElementById( "save_all" ).disabled = true;
-            document.getElementById( "save_all" ).innerHTML = "Please Wait...";
+            document.getElementById( "save_all" ).innerHTML = magicai_localize.please_wait;
 
             var formData = new FormData();
             var inputData = [];

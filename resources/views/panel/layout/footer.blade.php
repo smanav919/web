@@ -2,7 +2,7 @@
     <div class="container-xl">
         <div class="row text-center items-center flex-row-reverse">
             <div class="col-lg-auto lg:ms-auto">
-                <p>{{__('Version')}}: {{$setting->script_version}}R</p>
+                <p>{{__('Version')}}: {{format_double($setting->script_version)}}</p>
             </div>
             <div class="col-12 col-lg-auto mt-3 mt-lg-0">
 				<p>

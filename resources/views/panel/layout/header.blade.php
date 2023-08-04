@@ -136,7 +136,7 @@
                         </a>
                     </li>
 					@endif
-                    <li class="nav-item">
+					 <li class="nav-item">
                         <a class="nav-link {{activeRoute('dashboard.support.list')}}" href="{{route('dashboard.support.list')}}" >
 						<span class="nav-link-icon">
 							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path> <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path> <path d="M15 15l3.35 3.35"></path> <path d="M9 15l-3.35 3.35"></path> <path d="M5.65 5.65l3.35 3.35"></path> <path d="M18.35 5.65l-3.35 3.35"></path> </svg>
@@ -146,6 +146,16 @@
 						</span>
                         </a>
                     </li>
+                    {{-- <li class="nav-item">
+                        <a class="nav-link {{activeRoute('dashboard.admin.advertis.index')}}" href="{{route('dashboard.admin.advertis.index')}}" >
+						<span class="nav-link-icon">
+							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path> <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path> <path d="M15 15l3.35 3.35"></path> <path d="M9 15l-3.35 3.35"></path> <path d="M5.65 5.65l3.35 3.35"></path> <path d="M18.35 5.65l-3.35 3.35"></path> </svg>
+						</span>
+                            <span class="flex items-center transition-[opacity,transform] nav-link-title grow">
+							{{__('Advertis')}}
+						</span>
+                        </a>
+                    </li> --}}
 
                     <li>
                         <hr>
@@ -232,7 +242,7 @@
 								{{__('Templates')}}
 								</span>
                             </a>
-                            <div class="dropdown-menu {{activeRouteBulkShow(['dashboard.admin.openai.list', 'dashboard.admin.openai.custom.list', 'dashboard.admin.openai.chat.list', 'dashboard.admin.openai.categories.list'])}}">
+                            <div class="dropdown-menu {{activeRouteBulkShow(['dashboard.admin.openai.list', 'dashboard.admin.openai.custom.list', 'dashboard.admin.openai.chat.list', 'dashboard.admin.openai.categories.list', 'dashboard.email-templates.list'])}}">
                                 <a class="dropdown-item {{activeRoute('dashboard.admin.openai.list')}}" href="{{route('dashboard.admin.openai.list')}}">
                                     {{__('Built-in Templates')}}
                                 </a>
@@ -244,6 +254,9 @@
                                 </a>
                                 <a class="dropdown-item {{activeRoute('dashboard.admin.openai.chat.list')}}" href="{{route('dashboard.admin.openai.chat.list')}}">
                                     {{__('Chat Templates')}}
+                                </a>
+                                <a class="dropdown-item {{activeRoute('dashboard.email-templates.list')}}" href="{{route('dashboard.email-templates.list')}}">
+                                    {{__('Email Templates')}}
                                 </a>
                             </div>
                         </li>
@@ -304,7 +317,7 @@
 								{{__('Finance')}}
 							</span>
                             </a>
-                            <div class="dropdown-menu {{activeRouteBulkShow(['dashboard.admin.finance.plans.index'])}}">
+                            <div class="dropdown-menu {{activeRouteBulkShow(['dashboard.admin.finance.plans.index', 'dashboard.admin.finance.paymentGateways.index'])}}">
                                 <a class="dropdown-item {{activeRoute('dashboard.admin.finance.plans.index')}}" href="{{route('dashboard.admin.finance.plans.index')}}">
                                     {{__('Membership Plans')}}
                                 </a>
@@ -316,9 +329,20 @@
                         <li class="nav-item">
                             <a class="nav-link {{activeRoute('dashboard.page.list')}}" href="{{route('dashboard.page.list')}}" >
 								<span class="nav-link-icon">
-								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path><path d="M9 17h6"></path><path d="M9 13h6"></path></svg>								</span>
+									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path><path d="M9 17h6"></path><path d="M9 13h6"></path></svg>
+								</span>
                                 <span class="flex items-center transition-[opacity,transform] nav-link-title grow">
 									{{__('Pages')}}
+								</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{activeRoute('dashboard.blog.list')}}" href="{{route('dashboard.blog.list')}}" >
+								<span class="nav-link-icon">
+									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4"></path><path d="M13.5 6.5l4 4"></path></svg>
+								</span>
+                                <span class="flex items-center transition-[opacity,transform] nav-link-title grow">
+									{{__('Blog')}}
 								</span>
                             </a>
                         </li>
@@ -342,7 +366,7 @@
 									{{__('Settings')}}
 								</span>
                             </a>
-                            <div class="dropdown-menu {{activeRouteBulkShow(['dashboard.admin.settings.general', 'dashboard.admin.settings.invoice', 'dashboard.admin.settings.payment', 'dashboard.admin.settings.openai', 'dashboard.admin.settings.affiliate','dashboard.admin.settings.smtp', 'amamarul.translations.home', 'amamarul.translations.lang', 'dashboard.admin.settings.gdpr', 'dashboard.admin.settings.privacy', 'dashboard.admin.settings.tts' ])}}">
+                            <div class="dropdown-menu {{activeRouteBulkShow(['dashboard.admin.settings.general', 'dashboard.admin.settings.invoice', 'dashboard.admin.settings.payment', 'dashboard.admin.settings.openai', 'dashboard.admin.settings.affiliate','dashboard.admin.settings.smtp', 'amamarul.translations.home', 'amamarul.translations.lang', 'dashboard.admin.settings.gdpr', 'dashboard.admin.settings.privacy', 'dashboard.admin.settings.tts', 'dashboard.admin.settings.storage'])}}">
                                 <a class="dropdown-item {{activeRoute('dashboard.admin.settings.general')}}" href="{{route('dashboard.admin.settings.general')}}">
                                     {{__('General')}}
                                 </a>
@@ -354,6 +378,9 @@
                                 </a> -->
                                 <a class="dropdown-item {{activeRoute('dashboard.admin.settings.openai')}}" href="{{route('dashboard.admin.settings.openai')}}">
                                     {{__('OpenAI')}}
+                                </a>
+								<a class="dropdown-item {{activeRoute('dashboard.admin.settings.stablediffusion')}}" href="{{route('dashboard.admin.settings.stablediffusion')}}">
+                                    {{__('StableDiffusion')}}
                                 </a>
                                 <a class="dropdown-item {{activeRoute('dashboard.admin.settings.tts')}}" href="{{route('dashboard.admin.settings.tts')}}">
                                     {{__('Google TTS')}}
@@ -371,7 +398,10 @@
                                     {{__('Privacy Policy and Terms')}}
                                 </a>
                                 <a class="dropdown-item {{activeRoute('amamarul.translations.home')}} {{activeRoute('amamarul.translations.lang')}}" href="{{LaravelLocalization::localizeUrl( route('amamarul.translations.home') )}}">
-                                    {{__('Translate Strings')}}
+                                    {{__('Languages')}}
+                                </a>
+                                <a class="dropdown-item {{activeRoute('dashboard.admin.settings.storage')}}" href="{{route('dashboard.admin.settings.storage')}}">
+                                    {{__('Storage')}}
                                 </a>
                             </div>
                         </li>
@@ -418,6 +448,7 @@
                                         @endif
                                     </span>
                                 </div>
+								@if ($setting->feature_ai_image)
                                 <div class="d-flex align-items-center">
                                     <span class="legend !me-2 rounded-full bg-[#9E9EFF]"></span>
                                     <span>{{__('Image')}}</span>
@@ -429,14 +460,17 @@
                                         @endif
                                     </span>
                                 </div>
+								@endif
                             </div>
                             <div class="mb-2 progress progress-separated">
                                 @if((int)Auth::user()->remaining_words+(int)Auth::user()->remaining_images != 0)
                                     <div class="progress-bar grow-0 shrink-0 basis-auto bg-primary" role="progressbar" style="width: {{(int)Auth::user()->remaining_words/((int)Auth::user()->remaining_words+(int)Auth::user()->remaining_images)*100}}%" aria-label="{{__('Text')}}"></div>
                                 @endif
-                                @if((int)Auth::user()->remaining_words+(int)Auth::user()->remaining_images != 0)
-                                    <div class="progress-bar grow-0 shrink-0 basis-auto bg-[#9E9EFF]" role="progressbar" style="width: {{(int)Auth::user()->remaining_images/((int)Auth::user()->remaining_words+(int)Auth::user()->remaining_images)*100}}%" aria-label="{{__('Images')}}"></div>
-                                @endif
+								@if ($setting->feature_ai_image)
+									@if((int)Auth::user()->remaining_words+(int)Auth::user()->remaining_images != 0)
+										<div class="progress-bar grow-0 shrink-0 basis-auto bg-[#9E9EFF]" role="progressbar" style="width: {{(int)Auth::user()->remaining_images/((int)Auth::user()->remaining_words+(int)Auth::user()->remaining_images)*100}}%" aria-label="{{__('Images')}}"></div>
+									@endif
+								@endif
                             </div>
                         </div>
                     </li>
@@ -451,7 +485,7 @@
                             <div class="inline-block text-center text-[13px] leading-none text-muted border-solid border-[var(--tblr-border-color)] rounded-[var(--tblr-border-radius)] p-[1rem_2rem]">
                                 <p class="not-italic text-[20px] m-0 mb-2">🎁</p>
 								<span class="hidden group-[.navbar-shrinked]/body:inline"><. class="not-italic text-[20px] m-0 mb-2"substr(>🎁</, 0, 1)p></span>
-                                <p class="mb-[0.75em]">{{__('Invite your friend and get')}} {{$setting->affiliate_commission_percentage}}% {{__('on their all purchases.')}}</p>
+                                <p class="mb-[0.75em]">{{__('Invite your friend and get')}} {{$setting->affiliate_commission_percentage}}% {{__('on all their purchases.')}}</p>
                                 <p class="m-0">
                                     <a href="{{route('dashboard.user.affiliates.index')}}" class="btn btn-sm text-[11px]">{{__('Invite')}}</a>
                                 </p>
@@ -501,13 +535,14 @@
 					</a>
 				</div>
                 <div class="flex items-center">
-                    <a href="?theme=dark" class="nav-link items-center justify-center px-0 hide-theme-dark hover:!bg-transparent max-lg:w-10 max-lg:h-10 max-lg:p-0 max-lg:border max-lg:border-solid max-lg:border-[--tblr-border-color] max-lg:!rounded-full max-lg:dark:bg-white max-lg:dark:bg-opacity-[0.03]" title="Enable dark mode">
+                    <a href="?theme=dark" class="nav-link items-center justify-center px-0 hide-theme-dark hover:!bg-transparent max-lg:w-10 max-lg:h-10 max-lg:p-0 max-lg:border max-lg:border-solid max-lg:border-[--tblr-border-color] max-lg:!rounded-full max-lg:dark:bg-white max-lg:dark:bg-opacity-[0.03]" title="{{__('Enable dark mode')}}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" /></svg>
                     </a>
-                    <a href="?theme=light" class="nav-link items-center justify-center px-0 hide-theme-light hover:!bg-transparent max-lg:w-10 max-lg:h-10 max-lg:p-0 max-lg:border max-lg:border-solid max-lg:border-[--tblr-border-color] max-lg:!rounded-full max-lg:dark:bg-white max-lg:dark:bg-opacity-[0.03]" title="Enable light mode">
+                    <a href="?theme=light" class="nav-link items-center justify-center px-0 hide-theme-light hover:!bg-transparent max-lg:w-10 max-lg:h-10 max-lg:p-0 max-lg:border max-lg:border-solid max-lg:border-[--tblr-border-color] max-lg:!rounded-full max-lg:dark:bg-white max-lg:dark:bg-opacity-[0.03]" title="{{__('Enable light mode')}}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" /></svg>
                     </a>
                 </div>
+				@if(count( explode(',', $settings_two->languages) ) > 1)
                 <div class="nav-item dropdown">
                     <a href="#" class="nav-link px-0 hover:!bg-transparent max-lg:w-10 max-lg:h-10 max-lg:p-0 max-lg:border max-lg:border-solid max-lg:border-[--tblr-border-color] max-lg:!rounded-full max-lg:dark:bg-white max-lg:dark:bg-opacity-[0.03]" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show notifications">
 						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path> <path d="M3.6 9h16.8"></path> <path d="M3.6 15h16.8"></path> <path d="M11.5 3a17 17 0 0 0 0 18"></path> <path d="M12.5 3a17 17 0 0 1 0 18"></path> </svg>
@@ -515,13 +550,16 @@
                     <div class="dropdown-menu dropdown-menu-end">
 						<div class="flex flex-col">
                             @foreach(LaravelLocalization::getSupportedLocales() as $localeCode => $properties)
-							<a rel="alternate" hreflang="{{ $localeCode }}" href="{{ LaravelLocalization::getLocalizedURL($localeCode, null, [], true) }}" class="flex items-center px-3 py-2 border-solid border-[--tblr-border-color] border-t-0 border-r-0 border-l-0 last:border-b-0 text-heading transition-colors hover:no-underline hover:bg-[--tblr-border-color]">
-								<span class="text-[21px] !me-2">{{ country2flag(substr($properties['regional'], strrpos($properties['regional'], '_') + 1)) }} </span>{{$properties['native']}}
-							</a>
+								@if(in_array( $localeCode, explode(',', $settings_two->languages) ))
+									<a rel="alternate" hreflang="{{ $localeCode }}" href="{{ LaravelLocalization::getLocalizedURL($localeCode, null, [], true) }}" class="flex items-center px-3 py-2 border-solid border-[--tblr-border-color] border-t-0 border-r-0 border-l-0 last:border-b-0 text-heading transition-colors hover:no-underline hover:bg-[--tblr-border-color]">
+										<span class="text-[21px] !me-2">{{ country2flag(substr($properties['regional'], strrpos($properties['regional'], '_') + 1)) }} </span>{{$properties['native']}}
+									</a>
+								@endif
                             @endforeach
 						</div>
                     </div>
                 </div>
+				@endif
 				<div class="hidden items-center max-lg:flex">
 					<a href="{{route('dashboard.user.payment.subscription')}}" class="inline-flex items-center justify-center text-current w-10 h-10 p-0 border border-solid !border-[--tblr-border-color] !rounded-full dark:bg-white dark:bg-opacity-[0.03]">
 						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11"></path></svg>

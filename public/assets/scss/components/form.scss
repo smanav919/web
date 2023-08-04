@@ -41,6 +41,17 @@ button {
 	border-radius: 4px;
 }
 
+.form-selectgroup-input:checked+.form-selectgroup-label {
+	color: #000;
+	border-radius: 30px;
+	background: rgba(var(--tblr-primary-rgb),.1);
+}
+
+.form-selectgroup-label {
+	color: #000;
+	background-color: transparent;
+}
+
 .form-select,
 .form-control,
 .input-group-text {
@@ -276,6 +287,9 @@ button {
 			}
 		}
 	}
+	.form-selectgroup-input:checked+.form-selectgroup-label {
+		background: rgba(var(--tblr-primary-rgb),1);
+	}
 }
 
 html[dir=rtl] {
@@ -314,5 +328,11 @@ html[dir=rtl] {
 				gap: 3px;
 			}
 		}
+	}
+}
+
+@media (min-width: 992px) {
+	.image-input-for-fillanexample {
+		padding-right: 128px;
 	}
 }

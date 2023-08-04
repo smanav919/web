@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Gateways\StripeController;
 use App\Http\Controllers\Gateways\PaypalController;
+use App\Http\Controllers\Gateways\YokassaController;
 use App\Models\Activity;
 use App\Models\Currency;
 use App\Models\CustomSettings;
@@ -18,6 +19,7 @@ use App\Models\UserOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Laravel\Cashier\Subscription;
@@ -33,6 +35,7 @@ class GatewayController extends Controller
         return array(
             "stripe",
             "paypal",
+            "yokassa",
         );
     }
 
@@ -80,6 +83,31 @@ class GatewayController extends Controller
                 "live_app_id" => 1,
                 "currency" => 1,
                 "currency_locale" => 1,
+                "notify_url" => 0,
+                "base_url" => 0,
+                "sandbox_url" => 0,
+                "locale" => 0,
+                "validate_ssl" => 0,
+                "webhook_secret" => 0,
+                "logger" => 0,
+            ],
+            [
+                "code" => "yokassa",
+                "title" => "Yokassa",
+                "link" => "https://yokassa.ru/",
+                "active" => 0,
+                "available" => 1,
+                "img" => "/assets/img/payments/yokassa.svg",
+                "whiteLogo" => 0,
+                "mode" => 1,
+                "sandbox_client_id" => 1,
+                "sandbox_client_secret" => 1,
+                "sandbox_app_id" => 0,
+                "live_client_id" => 1,
+                "live_client_secret" => 1,
+                "live_app_id" => 0,
+                "currency" => 1,
+                "currency_locale" => 0,
                 "notify_url" => 0,
                 "base_url" => 0,
                 "sandbox_url" => 0,
@@ -261,6 +289,9 @@ class GatewayController extends Controller
                     if($code == 'paypal'){
                         $temp = PaypalController::saveAllProducts();
                     }
+                    // if($code == 'yokassa'){
+                    //     $temp = YokassaController::saveAllProducts();
+                    // }
 
                 }catch(\Exception $ex){
                     error_log("GatewayController::gatewaySettingsSave()\n".$ex->getMessage());
@@ -293,15 +324,30 @@ class GatewayController extends Controller
     }
 
 
+    public static function checkGatewayWebhooks() : void {
+        $host = $_SERVER['HTTP_HOST'];
+        if ($host !== 'localhost:8000' && $host !== '127.0.0.1:8000') {
+            $gateways = Gateways::all();
+            foreach($gateways as $gateway){
+                if($gateway->webhook_id == null){
+                    
+                    $gatewayCode = $gateway->code;
 
+                    if($gatewayCode == 'stripe'){
+                        $tmp = StripeController::createWebhook();
+                    }
+                    if($gatewayCode == 'paypal'){
+                        $tmp = PaypalController::createWebhook();
+                    }
+                    if($gatewayCode == 'yokassa'){
+                        $tmp = YokassaController::createWebhook();
+                    }
 
-
-
-
-
-
-
-
-
-
+                }
+            }
+            Log::info('All gateways are checked for webhooks.');
+        }else{
+            Log::info('Webhooks are not available on localhost. Skipping checkGatewayWebhooks()...');
+        }
+    }
 }

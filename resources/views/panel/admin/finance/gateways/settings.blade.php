@@ -169,6 +169,7 @@
                             <li>{{__('Cancel all old subscriptions. Acquired amounts do not reset.')}}</li>
                             <li>{{__('Generate new product definitions in your new gateway account.')}}</li>
                             <li>{{__('Generate new price definitions in your new gateway account.')}}</li>
+                            <li>{{__('Remove all webhooks defined before and create new webhook.')}}</li>
                             <!-- <li>{{__('')}}</li> -->
                         </ul>
                         

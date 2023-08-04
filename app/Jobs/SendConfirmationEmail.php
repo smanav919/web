@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Mail\ConfirmationEmail;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\EmailTemplates;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -19,6 +20,7 @@ class SendConfirmationEmail implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     protected $user;
     protected $settings;
+    protected $template;
 
     /**
      * Create a new job instance.
@@ -27,6 +29,7 @@ class SendConfirmationEmail implements ShouldQueue
     {
         $this->user = $user;
         $this->settings = Setting::first();
+        $this->template = EmailTemplates::where('id', 1)->first();
     }
 
     /**
@@ -35,6 +38,6 @@ class SendConfirmationEmail implements ShouldQueue
     public function handle()
     {
 
-        Mail::to($this->user->email)->send(new ConfirmationEmail($this->user, $this->settings));
+        Mail::to($this->user->email)->send(new ConfirmationEmail($this->user, $this->settings, $this->template));
     }
 }

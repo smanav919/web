@@ -6,7 +6,7 @@
     </div>
 @elseif (session()->get('flash_success'))
     <div class="alert alert-success">
-        {{__('JSON File Generated')}}
+        {{__('Success')}}
     </div>
 @elseif (session()->get('flash_warning'))
     <div class="alert alert-warning">

@@ -11,6 +11,7 @@ use App\Models\GatewayProducts;
 use App\Models\PaymentPlans;
 use App\Models\Setting;
 use App\Models\HowitWorks;
+use App\Models\YokassaSubscriptions as YokassaSubscriptionsModel;
 use App\Models\Subscriptions as SubscriptionsModel;
 use App\Models\User;
 use App\Models\UserAffiliate;
@@ -24,9 +25,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Carbon\Carbon;
 use Laravel\Cashier\Subscription;
+use Illuminate\Support\Facades\Log;
+
 
 use App\Http\Controllers\Gateways\StripeController;
 use App\Http\Controllers\Gateways\PaypalController;
+use App\Http\Controllers\Gateways\YokassaController;
 
 
 
@@ -66,6 +70,9 @@ class PaymentController extends Controller
             if($gatewayCode == 'paypal'){
                 return PaypalController::subscribe($planId, $plan);
             }
+            if($gatewayCode == 'yokassa'){
+                return YokassaController::subscribe($planId, $plan);
+            }
         }
         abort(404);
     }
@@ -76,15 +83,23 @@ class PaymentController extends Controller
         // Get current active subscription
         $activeSub = SubscriptionsModel::where([['stripe_status', '=', 'active'], ['user_id', '=', $userId]])->orWhere([['stripe_status', '=', 'trialing'], ['user_id', '=', $userId]])->first();
         if($activeSub == null){
-            abort(404, 'Could not find any subscription. Please check your gateways panel.');
-            return back()->with(['message' => 'Could not find any subscription. Please check your gateways panel.', 'type' => 'error']);
+            $activeSub_yokassa = YokassaSubscriptionsModel::where([['subscription_status', '=', 'active'],['user_id','=', $userId]])->first();
+            if($activeSub_yokassa == null){
+                abort(404, 'Could not find any subscription. Please check your gateways panel.');
+                return back()->with(['message' => 'Could not find any subscription. Please check your gateways panel.', 'type' => 'error']);
+            }
+            $gatewayCode = "yokassa";
+        } else {
+            $gatewayCode = $activeSub->paid_with;
         }
-        $gatewayCode = $activeSub->paid_with;
         if($gatewayCode == 'stripe'){
             return StripeController::subscribeCancel();
         }
         if($gatewayCode == 'paypal'){
             return PaypalController::subscribeCancel();
+        }
+        if($gatewayCode == 'yokassa'){
+            return YokassaController::subscribeCancel();
         }
         return back()->with(['message' => 'Could not cancel subscription. Please try again. If this error occures again, please update and migrate.', 'type' => 'error']);
     }
@@ -98,6 +113,9 @@ class PaymentController extends Controller
             }
             if($gatewayCode == 'paypal'){
                 return PaypalController::prepaid($planId, $plan);
+            }
+            if($gatewayCode == 'yokassa'){
+                return YokassaController::prepaid($planId, $plan);
             }
         }
         abort(404);
@@ -129,6 +147,10 @@ class PaymentController extends Controller
                     if($gateway->code == 'paypal'){
                         $tmp = PaypalController::saveProduct($planId, $productName, $price, $freq, $typ);
                     }
+                    if($gateway->code == 'yokassa'){
+                        // $tmp = YokassaController::saveProduct($planId, $productName, $price, $freq, $typ);
+                        return;
+                    }
                 }
             }
         }else{
@@ -154,6 +176,7 @@ class PaymentController extends Controller
 
 
     public static function getSubscriptionDaysLeft(){
+        Log::info("========");
         $userId=Auth::user()->id;
         // Get current active subscription
         $activeSub = SubscriptionsModel::where([['stripe_status', '=', 'active'], ['user_id', '=', $userId]])->orWhere([['stripe_status', '=', 'trialing'], ['user_id', '=', $userId]])->first();
@@ -166,7 +189,9 @@ class PaymentController extends Controller
                 return PaypalController::getSubscriptionDaysLeft();
             }
         }else{
-            return null;
+            $activeSub = YokassaSubscriptionsModel::where([['subscription_status', '=', 'active'],['user_id','=', $userId]])->first();
+            if($activeSub == null) return null;
+            else return YokassaController::getSubscriptionDaysLeft();
         }
     }
 
@@ -182,6 +207,9 @@ class PaymentController extends Controller
             }
             if($paid_with == 'paypal'){
                 return PaypalController::getSubscriptionRenewDate();
+            }
+            if($paid_with == 'yokassa'){
+                return YokassaController::getSubscriptionRenewDate();
             }
         }else{
             return null;
@@ -201,6 +229,10 @@ class PaymentController extends Controller
 
                 case 'paypal':
                     return PaypalController::getSubscriptionStatus();
+                    break;
+
+                case 'yokassa':
+                    return YokassaController::getSubscriptionStatus();
                     break;
 
                 default:
@@ -224,6 +256,10 @@ class PaymentController extends Controller
 
                 case 'paypal':
                     return PaypalController::checkIfTrial();
+                    break;
+                
+                case 'yokassa':
+                    return YokassaController::checkIfTrial();
                     break;
 
                 default:
@@ -270,6 +306,9 @@ class PaymentController extends Controller
                 case 'paypal':
                     $isValid = PaypalController::getSubscriptionStatus();
                     break;
+                case 'yokassa':
+                    $isValid = YokassaController::getSubscriptionStatus();
+                    break;
             }
             
             // getSubscriptionStatus function is already called on subscription status file. BUT after functions which gives errors,
@@ -309,6 +348,10 @@ class PaymentController extends Controller
         
                         case 'paypal':
                             $tmp = PaypalController::cancelSubscribedPlan($planId, $subsId);
+                            break;
+        
+                        case 'yokassa':
+                            $tmp = YokassaController::cancelSubscribedPlan($planId, $subsId);
                             break;
                     }
                 }

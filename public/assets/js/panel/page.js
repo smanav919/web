@@ -2,7 +2,7 @@ function pageSave( page_id ) {
 	"use strict";
 
 	document.getElementById( "page_button" ).disabled = true;
-	document.getElementById( "page_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "page_button" ).innerHTML = magicai_localize.please_wait;
 
 
 	var formData = new FormData();

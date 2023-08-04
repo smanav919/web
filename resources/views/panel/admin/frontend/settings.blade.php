@@ -62,10 +62,27 @@
                     <div class="row mb-4">
                         <h3 class="mb-[25px] text-[20px]">{{__('Frontend Settings')}}</h3>
 
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">{{__('PreHeader Section')}}</label>
+                                <select class="form-select" name="preheader_active" id="preheader_active">
+                                    <option value="1" {{$fSectSettings->preheader_active == 1 ? 'selected' : ''}}>{{__('Active')}}</option>
+                                    <option value="0" {{$fSectSettings->preheader_active == 0 ? 'selected' : ''}}>{{__('Passive')}}</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="col-md-12 ">
                             <div class="mb-3">
-                                <label class="form-label">{{__('Header Banner Title')}}</label>
+                                <label class="form-label">{{__('PreHeader Title')}}</label>
                                 <input type="text" class="form-control" id="header_title" name="header_title" value="{{$fSetting->header_title}}">
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">{{__('PreHeader Text')}}</label>
+                                <input type="text" class="form-control" id="header_text" name="header_text" value="{{$fSetting->header_text}}">
                             </div>
                         </div>
 
@@ -80,13 +97,6 @@
                             <div class="mb-3">
                                 <label class="form-label">{{__('Sign Up Text')}}</label>
                                 <input type="text" class="form-control" id="join_hub" name="join_hub" value="{{$fSetting->join_hub}}">
-                            </div>
-                        </div>
-
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label class="form-label">{{__('Header Banner Text')}}</label>
-                                <input type="text" class="form-control" id="header_text" name="header_text" value="{{$fSetting->header_text}}">
                             </div>
                         </div>
 
@@ -238,7 +248,7 @@
                         <h3 class="mb-[25px] text-[20px]">{{__('Advanced Settings')}}</h3>
                         <div class="col-md-12">
                             <div class="mb-3">
-                                <label class="form-label">{{__('Additional Landing Page URL')}}</label>
+                                <label class="form-label">{{__('Custom Landing Page URL')}}</label>
                                 <input type="text" class="form-control" id="frontend_additional_url" name="frontend_additional_url" value="{{$setting->frontend_additional_url}}">
 								<div class="bg-blue-100 text-blue-600 rounded-xl !p-3 !mt-2 dark:bg-blue-600/20 dark:text-blue-200">
 									<svg class="inline !me-1" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path> <path d="M12 9h.01"></path> <path d="M11 12h1v4h1"></path> </svg>

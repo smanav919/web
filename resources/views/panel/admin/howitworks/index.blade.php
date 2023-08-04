@@ -86,6 +86,7 @@
 					</table>
 				</div>
             </div>
+            @if(env('APP_STATUS') != 'Demo')
             <div class="d-flex mb-2 mt-5"><h3>{{__('Bottom Line Settings')}}</h3></div>
             <div class="vstack gap-2" id="bottomlinesettings">
 
@@ -107,11 +108,8 @@
 
                 <div class="{{ $defaults['option'] == 0 ? 'd-none' : ''}}"><span class="text-muted">{{__('Preview')}} : </span>{!! $defaults["html"] !!}</div>
 
-
             </div>
-            <div>
-
-            </div>
+            @endif
             <div class="d-flex mb-3 mt-5"><span class="text-muted"><em>{{__('*You can use HTML in Step Title and Bottom Line.')}}</em></span></div>
         </div>
     </div>

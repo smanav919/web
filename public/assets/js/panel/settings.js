@@ -11,7 +11,7 @@ function frontendSettingsSave() {
 	"use strict";
 
 	document.getElementById( "settings_button" ).disabled = true;
-	document.getElementById( "settings_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
 
 	var formData = new FormData();
 	formData.append( 'site_name', $( "#site_name" ).val() );
@@ -28,6 +28,7 @@ function frontendSettingsSave() {
 	formData.append( 'frontend_footer_twitter', $( "#frontend_footer_twitter" ).val() );
 	formData.append( 'frontend_footer_instagram', $( "#frontend_footer_instagram" ).val() );
 
+    formData.append( 'preheader_active', $( "#preheader_active" ).val() );
     formData.append( 'header_title', $( "#header_title" ).val() );
     formData.append( 'header_text', $( "#header_text" ).val() );
     formData.append( 'sign_in', $( "#sign_in" ).val() );
@@ -82,7 +83,7 @@ function frontendSectionSettingsSave() {
     "use strict";
 
     document.getElementById( "settings_button" ).disabled = true;
-    document.getElementById( "settings_button" ).innerHTML = "Please Wait...";
+    document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
 
     var formData = new FormData();
     formData.append( 'features_active', $( "#features_active" ).val() );
@@ -126,6 +127,17 @@ function frontendSectionSettingsSave() {
     formData.append( 'faq_text_two', $( "#faq_text_two" ).val() );
 
 
+    formData.append( 'blog_active', $( "#blog_active" ).val() );
+    formData.append( 'blog_title', $( "#blog_title" ).val() );
+    formData.append( 'blog_subtitle', $( "#blog_subtitle" ).val() );
+    formData.append( 'blog_posts_per_page', $( "#blog_posts_per_page" ).val() );
+    formData.append( 'blog_button_text', $( "#blog_button_text" ).val() );
+    formData.append( 'blog_a_title', $( "#blog_a_title" ).val() );
+    formData.append( 'blog_a_subtitle', $( "#blog_a_subtitle" ).val() );
+    formData.append( 'blog_a_description', $( "#blog_a_description" ).val() );
+    formData.append( 'blog_a_posts_per_page', $( "#blog_a_posts_per_page" ).val() );
+
+
     $.ajax( {
         type: "post",
         url: "/dashboard/admin/frontend/section-settings-save",
@@ -153,7 +165,7 @@ function menuSettingsSave() {
 	"use strict";
 
 	document.getElementById( "settings_button" ).disabled = true;
-	document.getElementById( "settings_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
 
 	var formData = new FormData();
 	var menuData = [];
@@ -201,7 +213,7 @@ function affiliateSettingsSave() {
 	"use strict";
 
 	document.getElementById( "settings_button" ).disabled = true;
-	document.getElementById( "settings_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
 
 	var formData = new FormData();
 	formData.append( 'affiliate_minimum_withdrawal', $( "#affiliate_minimum_withdrawal" ).val() );
@@ -234,7 +246,7 @@ function generalSettingsSave() {
 	"use strict";
 
 	document.getElementById( "settings_button" ).disabled = true;
-	document.getElementById( "settings_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
 
 	var formData = new FormData();
 	formData.append( 'site_name', $( "#site_name" ).val() );
@@ -348,7 +360,7 @@ function invoiceSettingsSave() {
 	"use strict";
 
 	document.getElementById( "settings_button" ).disabled = true;
-	document.getElementById( "settings_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
 
 	var formData = new FormData();
 	formData.append( 'invoice_name', $( "#invoice_name" ).val() );
@@ -388,7 +400,7 @@ function stripeSettingsSave() {
 	"use strict";
 
 	document.getElementById( "settings_button" ).disabled = true;
-	document.getElementById( "settings_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
 
 	var formData = new FormData();
 	formData.append( 'default_currency', $( "#default_currency" ).val() );
@@ -424,7 +436,7 @@ function openaiSettingsSave() {
 	"use strict";
 
 	document.getElementById( "settings_button" ).disabled = true;
-	document.getElementById( "settings_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
 
 	var formData = new FormData();
 	formData.append( 'openai_api_secret', $( "#openai_api_secret" ).val() );
@@ -434,6 +446,8 @@ function openaiSettingsSave() {
 	formData.append( 'openai_default_creativity', $( "#openai_default_creativity" ).val() );
 	formData.append( 'openai_max_input_length', $( "#openai_max_input_length" ).val() );
 	formData.append( 'openai_max_output_length', $( "#openai_max_output_length" ).val() );
+    formData.append( 'openai_default_stream_server', $( "#openai_default_stream_server" ).val() );
+
 
 	$.ajax( {
 		type: "post",
@@ -458,11 +472,44 @@ function openaiSettingsSave() {
 	return false;
 }
 
+function stablediffusionSettingsSave() {
+	"use strict";
+
+	document.getElementById( "settings_button" ).disabled = true;
+	document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
+
+	var formData = new FormData();
+	formData.append( 'stable_diffusion_api_key', $( "#stable_diffusion_api_key" ).val() );
+	formData.append( 'stablediffusion_default_language', $( "#stablediffusion_default_language" ).val() );
+
+	$.ajax( {
+		type: "post",
+		url: "/dashboard/admin/settings/stablediffusion-save",
+		data: formData,
+		contentType: false,
+		processData: false,
+		success: function ( data ) {
+			toastr.success( 'Settings saved succesfully.' );
+			document.getElementById( "settings_button" ).disabled = false;
+			document.getElementById( "settings_button" ).innerHTML = "Save";
+		},
+		error: function ( data ) {
+			var err = data.responseJSON.errors;
+			$.each( err, function ( index, value ) {
+				toastr.error( value );
+			} );
+			document.getElementById( "settings_button" ).disabled = false;
+			document.getElementById( "settings_button" ).innerHTML = "Save";
+		}
+	} );
+	return false;
+}
+
 function ttsSettingsSave() {
 	"use strict";
 
 	document.getElementById( "settings_button" ).disabled = true;
-	document.getElementById( "settings_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
 
 	var formData = new FormData();
 	formData.append( 'gcs_file', $( "#gcs_file" ).val() );
@@ -496,7 +543,7 @@ function smtpSettingsSave() {
     "use strict";
 
     document.getElementById( "settings_button" ).disabled = true;
-    document.getElementById( "settings_button" ).innerHTML = "Please Wait...";
+    document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
 
     var formData = new FormData();
     formData.append( 'smtp_host', $( "#smtp_host" ).val() );
@@ -534,7 +581,7 @@ function gdprSettingsSave() {
     "use strict";
 
     document.getElementById( "settings_button" ).disabled = true;
-    document.getElementById( "settings_button" ).innerHTML = "Please Wait...";
+    document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
 
     var formData = new FormData();
     formData.append( 'gdpr_status', $( "#gdpr_status" ).is(":checked") ? 1 : 0 );
@@ -568,7 +615,7 @@ function privacySettingsSave() {
     "use strict";
 
     document.getElementById( "settings_button" ).disabled = true;
-    document.getElementById( "settings_button" ).innerHTML = "Please Wait...";
+    document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
 
     var formData = new FormData();
     formData.append( 'privacy_enable', $( "#privacy_enable" ).is(":checked") ? 1 : 0 );
@@ -605,7 +652,7 @@ function faqCreateOrUpdate(faq_id) {
     "use strict";
 
     document.getElementById( "faq_button" ).disabled = true;
-    document.getElementById( "faq_button" ).innerHTML = "Please Wait...";
+    document.getElementById( "faq_button" ).innerHTML = magicai_localize.please_wait;
 
     var formData = new FormData();
     formData.append( 'question', $( "#question" ).val() );
@@ -640,7 +687,7 @@ function toolsCreateOrUpdate(item_id) {
     "use strict";
 
     document.getElementById( "item_button" ).disabled = true;
-    document.getElementById( "item_button" ).innerHTML = "Please Wait...";
+    document.getElementById( "item_button" ).innerHTML = magicai_localize.please_wait;
 
     var formData = new FormData();
     formData.append( 'title', $( "#title" ).val() );
@@ -678,7 +725,7 @@ function futureCreateOrUpdate(item_id) {
     "use strict";
 
     document.getElementById( "item_button" ).disabled = true;
-    document.getElementById( "item_button" ).innerHTML = "Please Wait...";
+    document.getElementById( "item_button" ).innerHTML = magicai_localize.please_wait;
 
     var formData = new FormData();
     formData.append( 'title', $( "#title" ).val() );
@@ -715,7 +762,7 @@ function whoisCreateOrUpdate(item_id) {
     "use strict";
 
     document.getElementById( "item_button" ).disabled = true;
-    document.getElementById( "item_button" ).innerHTML = "Please Wait...";
+    document.getElementById( "item_button" ).innerHTML = magicai_localize.please_wait;
 
     var formData = new FormData();
     formData.append( 'title', $( "#title" ).val() );
@@ -750,7 +797,7 @@ function generatorlistCreateOrUpdate(item_id) {
     "use strict";
 
     document.getElementById( "item_button" ).disabled = true;
-    document.getElementById( "item_button" ).innerHTML = "Please Wait...";
+    document.getElementById( "item_button" ).innerHTML = magicai_localize.please_wait;
 
     var formData = new FormData();
     formData.append( 'menu_title', $( "#menu_title" ).val() );
@@ -788,4 +835,36 @@ function generatorlistCreateOrUpdate(item_id) {
         }
     } );
     return false;
+}
+
+function imageStorageSettingsSave() {
+	"use strict";
+
+	document.getElementById( "settings_button" ).disabled = true;
+	document.getElementById( "settings_button" ).innerHTML = magicai_localize.please_wait;
+
+	var formData = new FormData();
+	formData.append( 'ai_image_storage', $( "#ai_image_storage" ).val() );
+
+	$.ajax( {
+		type: "post",
+		url: "/dashboard/admin/settings/storage-save",
+		data: formData,
+		contentType: false,
+		processData: false,
+		success: function ( data ) {
+			toastr.success( 'Settings saved succesfully.' );
+			document.getElementById( "settings_button" ).disabled = false;
+			document.getElementById( "settings_button" ).innerHTML = "Save";
+		},
+		error: function ( data ) {
+			var err = data.responseJSON.errors;
+			$.each( err, function ( index, value ) {
+				toastr.error( value );
+			} );
+			document.getElementById( "settings_button" ).disabled = false;
+			document.getElementById( "settings_button" ).innerHTML = "Save";
+		}
+	} );
+	return false;
 }

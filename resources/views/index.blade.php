@@ -24,12 +24,12 @@
 					{!! __($fSetting->hero_title) !!}
 					@if($fSetting->hero_title_text_rotator != null)
                         <span class="lqd-text-rotator inline-grid grid-cols-1 grid-rows-1 transition-[width] duration-200">
-						@foreach( explode(',' , __($fSetting->hero_title_text_rotator)) as $keyword )
-                                <span class="lqd-text-rotator-item inline-flex col-start-1 row-start-1 transition-all duration-300 opacity-0 blur-sm translate-x-3 [&.lqd-is-active]:blur-0 [&.lqd-is-active]:opacity-100 [&.lqd-is-active]:translate-x-0 {{ $loop->first ? 'lqd-is-active' : '' }}">
-								<span>{!! $keyword !!}</span>
-							</span>
-                            @endforeach
-					</span>
+							@foreach( explode(',' , __($fSetting->hero_title_text_rotator)) as $keyword )
+								<span class="lqd-text-rotator-item inline-flex col-start-1 row-start-1 transition-all duration-300 opacity-0 blur-sm translate-x-3 [&.lqd-is-active]:blur-0 [&.lqd-is-active]:opacity-100 [&.lqd-is-active]:translate-x-0 {{ $loop->first ? 'lqd-is-active' : '' }}">
+									<span>{!! $keyword !!}</span>
+								</span>
+							@endforeach
+						</span>
                     @endif
 					<svg class="inline lqd-split-text-words transition-all duration-[2850ms]" width="47" height="62" viewBox="0 0 47 62" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
 						<path d="M27.95 0L0 38.213H18.633V61.141L46.583 22.928H27.95V0Z"/>
@@ -337,19 +337,40 @@
 			/>
 			<div class="lqd-tabs text-center">
 				<div class="lqd-tabs-triggers inline-flex flex-wrap gap-2 mx-auto mb-9 text-[15px] font-medium leading-none border rounded-md">
-					<x-tabs-trigger target="#pricing-monthly" style="3" label="{{__('Monthly Billing')}}" badge="{{__($fSectSettings->pricing_save_percent)}}" active="true" />
-					<x-tabs-trigger target="#pricing-prepaid" style="3" label="{{__('Prepaid')}}" />
+					<x-tabs-trigger target="#pricing-monthly" style="3" label="{{__('Monthly Billing')}}" active="true" />
+					<x-tabs-trigger target="#pricing-annual" style="3" label="{{__('Annual Billing')}}" badge="{{__($fSectSettings->pricing_save_percent)}}" />
+					<x-tabs-trigger target="#pricing-prepaid" style="3" label="{{__('Token Packs')}}" />
 				</div>
 				<div class="lqd-tabs-content-wrap max-xl:px-0 px-10">
 					<div class="lqd-tabs-content">
 						<div id="pricing-monthly">
 							<div class="grid grid-cols-3 gap-2 max-md:grid-cols-1 ">
-                                @foreach($plansSubscription as $plan)
+                                @foreach($plansSubscriptionMonthly as $plan)
 									<x-price-table
 										currency="{{currency()->symbol}}"
 										featured="{{$plan->is_featured == 1}}"
 										title="{!! $plan->name !!}"
-										price="{{$plan->price}}"
+										price="{{number_format($plan->price, 2)}}"
+										period="{{$plan->frequency == 'monthly' ? 'month' : 'year'}}"
+										buttonLabel="{{__('Select')}} {{$plan->name}}"
+										buttonLink="{{route('login')}}"
+										activeFeatures="{{$plan->features}}"
+										inactiveFeatures=""
+										totalWords="{{$plan->total_words}}"
+										totalImages="{{$plan->total_images}}"
+										trialDays="{{$plan->trial_days}}"
+									/>
+                                @endforeach
+							</div>
+						</div>
+						<div class="hidden" id="pricing-annual">
+							<div class="grid grid-cols-3 gap-2 max-md:grid-cols-1 ">
+                                @foreach($plansSubscriptionAnnual as $plan)
+									<x-price-table
+										currency="{{currency()->symbol}}"
+										featured="{{$plan->is_featured == 1}}"
+										title="{!! $plan->name !!}"
+										price="{{number_format($plan->price, 2)}}"
 										period="{{$plan->frequency == 'monthly' ? 'month' : 'year'}}"
 										buttonLabel="{{__('Select')}} {{$plan->name}}"
 										buttonLink="{{route('login')}}"
@@ -430,6 +451,41 @@
     </section>
 @endif
 
+@if($fSectSettings->blog_active == 1)
+	<section class="site-section py-10 mb-14 md:opacity-0 md:translate-y-8 transition-all duration-700 [&.lqd-is-in-view]:opacity-100 [&.lqd-is-in-view]:translate-y-0" id="blog">
+		<div class="container">
+			<x-section-header
+				mb="9"
+				width="w-1/2"
+				title="{!! __($fSectSettings->blog_title) !!}"
+				subtitle=""
+			>
+				<h6 class="inline-block py-1 px-3 mb-6 rounded-md text-[13px] font-medium text-[#60027C] bg-[#60027C] bg-opacity-15">
+					{!! __($fSectSettings->blog_subtitle) !!}</span>
+				</h6>
+		</x-section-header>
+			<div class="grid gap-14 grid-cols-1 md:grid-cols-2 lg:grid-cols-{{$fSectSettings->blog_posts_per_page}} mb-10">
+				@foreach ($posts as $post)
+					@include('blog.part.card')
+				@endforeach
+			</div>
+			<div class="flex justify-center">
+				<a class="flex space-x-2 group" href="/blog">
+					<div class="bg-green-100 text-green-500 group-hover:bg-green-200 text-sm font-semibold py-1 px-2 rounded-md transition-colors">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+							<path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+							<path d="M12 5l0 14"></path>
+							<path d="M5 12l14 0"></path>
+						</svg>
+					</div>
+					<div class="bg-green-100 text-green-500 group-hover:bg-green-200 text-sm font-semibold py-1 px-2 rounded-md transition-colors">
+						{{__($fSectSettings->blog_button_text)}}
+					</div>
+				</a>
+			</div>
+		</div>
+	</section>
+@endif
 
 @if($setting->gdpr_status == 1)
 <div id="gdpr" class="bg-white fixed z-50 p-2 rounded-full drop-shadow-2xl bottom-12 left-1/2 -translate-x-1/2 max-sm:w-11/12">

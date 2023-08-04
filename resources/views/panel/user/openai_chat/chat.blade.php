@@ -41,11 +41,11 @@
     </div>
 
 	<template id="chat_user_bubble">
-		<div class="flex flex-row-reverse content-end mb-2 lg:ms-auto lg:max-w-[50%] gap-[8px]">
+		<div class="lqd-chat-user-bubble flex flex-row-reverse content-end mb-2 lg:ms-auto gap-[8px]">
 			<span class="text-dark">
 				<span class="avatar w-[24px] h-[24px] shrink-0" style="background-image: url(/{{Auth::user()->avatar}})"></span>
 			</span>
-			<div class="border-none rounded-[2em] mb-[7px] bg-[#F3E2FD] text-[#090A0A] dark:bg-[rgba(var(--tblr-primary-rgb),0.3)] dark:text-white">
+			<div class="max-w-[calc(100%-64px)] border-none rounded-[2em] mb-[7px] bg-[#F3E2FD] text-[#090A0A] dark:bg-[rgba(var(--tblr-primary-rgb),0.3)] dark:text-white">
 				<div class="chat-content py-[0.75rem] px-[1.5rem]">
 				</div>
 			</div>
@@ -53,12 +53,23 @@
 	</template>
 
 	<template id="chat_ai_bubble">
-		<div class="flex content-start mb-2 lg:max-w-[50%] gap-[8px] group">
+		<div class="lqd-chat-ai-bubble flex content-start mb-2 gap-[8px] group">
 			<span class="text-dark">
-				<span class="avatar w-[24px] h-[24px] shrink-0" style="background-image: url(/assets/img/default-ai-img.png)"></span>
+				<span class="avatar w-[24px] h-[24px] shrink-0" style="background-image: url('/{{$chat->category->image ?? 'assets/img/auth/default-avatar.png'}}')"></span>
 			</span>
-			<div class="border-none rounded-[2em] mb-[7px] min-h-[44px] text-[#090A0A] relative before:content-[''] before:rounded-[2em] before:inline-block before:bg-[#E5E7EB] before:absolute before:inset-0 group-[&.loading]:before:animate-pulse-intense dark:before:bg-[rgba(255,255,255,0.02)] dark:text-white">
-				<pre class="chat-content py-[0.75rem] px-[1.5rem] bg-transparent text-inherit font-[inherit] text-[1em] indent-0 m-0 w-full relative whitespace-pre-wrap"></pre>
+			<div class="chat-content-container border-none rounded-[2em] mb-[7px] min-h-[44px] max-w-[calc(100%-64px)] text-[#090A0A] relative before:content-[''] before:rounded-[2em] before:inline-block before:bg-[#E5E7EB] before:absolute before:inset-0 group-[&.loading]:before:animate-pulse-intense dark:before:bg-[rgba(255,255,255,0.02)] dark:text-white">
+				<div class="lqd-typing !inline-flex !items-center !rounded-full !py-2 !px-3 !gap-3 !leading-none !font-medium">
+					<div class="lqd-typing-dots !flex !items-center !gap-1">
+						<span class="lqd-typing-dot !w-1 !h-1 !rounded-full"></span>
+						<span class="lqd-typing-dot !w-1 !h-1 !rounded-full"></span>
+						<span class="lqd-typing-dot !w-1 !h-1 !rounded-full"></span>
+					</div>
+				</div>
+				<pre class="chat-content py-[0.75rem] px-[1.5rem] bg-transparent text-inherit font-[inherit] text-[1em] indent-0 m-0 w-full relative whitespace-pre-wrap empty:!hidden"></pre>
+				<button class="lqd-clipboard-copy inline-flex items-center justify-center w-10 h-10 p-0 border-none absolute bottom-0 -end-5 bg-white rounded-full text-black !shadow-lg pointer-events-auto opacity-0 invisible transition-all hover:-translate-y-[2px] hover:scale-110 group-hover:!opacity-100 group-hover:!visible" title="{{__('Copy to clipboard')}}" data-copy-options='{ "content": ".chat-content", "contentIn": "<.chat-content-container" }'>
+					<span class="sr-only">{{__('Copy to clipboard')}}</span>
+					<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 96 960 960" fill="currentColor" width="20"> <path d="M180 975q-24 0-42-18t-18-42V312h60v603h474v60H180Zm120-120q-24 0-42-18t-18-42V235q0-24 18-42t42-18h440q24 0 42 18t18 42v560q0 24-18 42t-42 18H300Zm0-60h440V235H300v560Zm0 0V235v560Z"/> </svg>
+				</button>
 			</div>
 		</div>
 	</template>
@@ -68,13 +79,6 @@
         <input type="hidden" id="guest_event_id" value="{{$apikeyPart1}}">
         <input type="hidden" id="guest_look_id" value="{{$apikeyPart2}}">
         <input type="hidden" id="guest_product_id" value="{{$apikeyPart3}}">
-        @if($category->prompt_prefix != null)
-            <input type="hidden" id="prompt_prefix" value="You will now play a character and respond as that character (You will never break character). Your name is {{$category->human_name}}.
-        You will act as {{$category->role}}. {{$category->prompt_prefix}}">
-        @else
-            <input type="hidden" id="prompt_prefix" value="{{$category->prompt_prefix}}">
-
-        @endif
     @endif
 
 @endsection
@@ -88,32 +92,32 @@
             const guest_event_id = document.getElementById("guest_event_id").value;
             const guest_look_id = document.getElementById("guest_look_id").value;
             const guest_product_id = document.getElementById("guest_product_id").value;
-            const prompt_prefix = document.getElementById("prompt_prefix").value;
-
+            const stream_type = '{!!$settings_two->openai_default_stream_server!!}';
+            const category = @json($category);
             const messages = [];
             @if($lastThreeMessage != null)
                 @foreach($lastThreeMessage as $entry)
                     message = {
                     role: "user",
-                    content: "{{$entry->input}}"
+                    content: @json($entry->input)
                 };messages.push(message);
                 message = {
                     role: "assistant",
-                    content: "{{$entry->output}}"
+                    content: @json($entry->output)
                 };messages.push(message);
                 @endforeach
             @endif
 
-            @if($chat_completions != null)
-                @foreach($chat_completions as $item)
-                message = {
-                role: "{{$item["role"]}}",
-                content: "{{$item["content"]}}"
-                };messages.push(message);
-                @endforeach
-            @endif
+            // @if($chat_completions != null)
+            //     @foreach($chat_completions as $item)
+            //     message = {
+            //     role: "{{$item["role"]}}",
+            //     content: "{{$item["content"]}}"
+            //     };messages.push(message);
+            //     @endforeach
+            // @endif
 
-            console.log(messages);
+            // console.log(messages);
         </script>
 
         <script src="/assets/js/panel/openai_chat_low.js"></script>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendConfirmationEmail;
+use App\Models\Blog;
 use App\Models\Clients;
 use App\Models\CustomSettings;
 use App\Models\Faq;
@@ -16,6 +17,7 @@ use App\Models\OpenAIGenerator;
 use App\Models\OpenaiGeneratorFilter;
 use App\Models\PaymentPlans;
 use App\Models\Setting;
+use App\Models\FrontendSectionsStatusses;
 use App\Models\Testimonials;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +32,8 @@ class IndexController extends Controller
         $filters = OpenaiGeneratorFilter::all();
         $templates = OpenAIGenerator::all();
         $plansSubscription = PaymentPlans::where('type', 'subscription')->get();
+        $plansSubscriptionMonthly = PaymentPlans::where([['type', '=', 'subscription'], ['frequency', '=', 'monthly']])->get();
+        $plansSubscriptionAnnual = PaymentPlans::where([['type', '=', 'subscription'], ['frequency', '=', 'yearly']])->get();
         $plansPrepaid = PaymentPlans::where('type', 'prepaid')->get();
         $faq = Faq::all();
         $tools = FrontendTools::all();
@@ -40,14 +44,12 @@ class IndexController extends Controller
         $clients = Clients::all();
         $who_is_for = FrontendForWho::all();
         $generatorsList = FrontendGenerators::all();
-
-
+        $posts = Blog::where('status', 1)->orderBy('id', 'desc')->paginate(FrontendSectionsStatusses::first()->blog_posts_per_page ?? 3);
 
         $setting = Setting::first();
         if ($setting->frontend_additional_url != null){
             return Redirect::to($setting->frontend_additional_url);
         }
-
 
         return view('index', compact(
             'templates',
@@ -62,11 +64,14 @@ class IndexController extends Controller
             'clients',
             'futures',
             'who_is_for',
-            'generatorsList'
+            'generatorsList',
+            'plansSubscriptionMonthly',
+            'plansSubscriptionAnnual',
+            'posts'
         ));
     }
 
-    public function activate(Request $request){
+  public function activate(Request $request){
         $valid = $request->liquid_license_status;
         if ($valid == 'valid'){
             $settings = Setting::first();
@@ -77,7 +82,6 @@ class IndexController extends Controller
             echo 'Activation failed!';
         }
     }
-
 
     public function howitWorksDefaults(){
         $values = json_decode('{"option": TRUE, "html": ""}');

@@ -4,7 +4,7 @@ function howitWorksSave( howitWorks_id ) {
     // console.log("Saving \"How it Works\" Step...");
 
     document.getElementById( "item_edit_button" ).disabled = true;
-	document.getElementById( "item_edit_button" ).innerHTML = "Please Wait...";
+	document.getElementById( "item_edit_button" ).innerHTML = magicai_localize.please_wait;
 
 	var formData = new FormData();
 	if ( howitWorks_id != 'undefined' ) {

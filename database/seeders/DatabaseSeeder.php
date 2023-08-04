@@ -51,6 +51,9 @@ class DatabaseSeeder extends Seeder
 
         $path13 = resource_path('/dev_tools/health_check_result_history_items.sql');
         DB::unprepared(file_get_contents($path13));
+       
+        $path14 = resource_path('/dev_tools/email_templates.sql');
+        DB::unprepared(file_get_contents($path14));
 
         $this->command->info('Currency table seeded!');
     }
